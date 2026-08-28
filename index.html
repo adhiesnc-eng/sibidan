@@ -37,7 +37,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- BANNER AUTO-UPDATE (MUNCUL OTOMATIS JIKA ADA VERSI BARU DARI PUSKESMAS) -->
+  <!-- BANNER AUTO-UPDATE -->
   <div id="updateBanner" class="hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600 text-white shadow-lg sticky top-0 z-50 animate-slide-down border-b border-white/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
       <div class="flex items-center gap-2">
@@ -227,7 +227,7 @@
 
         <div class="sm:col-span-3">
           <select id="filterRT" onchange="applyFilters()" class="w-full py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white">
-            <option value="">Semua Wilayah RT</option>
+            <option value="">Semua Wilayah RT/RW</option>
           </select>
         </div>
 
@@ -246,7 +246,7 @@
           <thead class="bg-slate-100 text-slate-700 text-xs uppercase font-bold tracking-wider border-b border-slate-200">
             <tr>
               <th class="py-3 px-3 text-center w-12">No</th>
-              <th class="py-3 px-3">Desa / RT / KK</th>
+              <th class="py-3 px-3">Desa / RT/RW / KK</th>
               <th class="py-3 px-3">Nama Sasaran & NIK</th>
               <th class="py-3 px-3 text-center">JK / Usia</th>
               <th class="py-3 px-3">Hub / Pekerjaan</th>
@@ -437,7 +437,7 @@
     </div>
   </div>
 
-  <!-- MODAL FORM SASARAN -->
+  <!-- MODAL FORM SASARAN (INPUT MANUAL RT/RW) -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center rounded-t-2xl">
@@ -460,20 +460,9 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RT / Dusun</label>
-            <select id="formRT" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white">
-              <option value="1">RT 01</option>
-              <option value="2">RT 02</option>
-              <option value="3">RT 03</option>
-              <option value="4">RT 04</option>
-              <option value="5">RT 05</option>
-              <option value="6">RT 06</option>
-              <option value="7">RT 07</option>
-              <option value="8">RT 08</option>
-              <option value="9">RT 09</option>
-              <option value="10">RT 10</option>
-              <option value="11">RT 11</option>
-            </select>
+            <!-- INPUT MANUAL RT/RW BEBAS KETIK -->
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RT/RW</label>
+            <input type="text" id="formRT" required placeholder="Contoh: 001/001 atau 1" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-medium">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nomor KK</label>
@@ -571,7 +560,6 @@
     // 0. SISTEM VERSI DINAMIS & AUTO-UPDATE ENGINE
     // ==========================================
     const DEFAULT_APP_VERSION = "v1.2.0";
-    // Ambil versi lokal yang tersimpan di memori browser pengguna
     let localAppVersion = localStorage.getItem('sibidan_app_version') || DEFAULT_APP_VERSION;
     let pendingServerVersion = "";
 
@@ -583,7 +571,6 @@
       document.getElementById('modalLocalVer').innerText = ver;
     }
 
-    // Jalankan inisialisasi label versi
     updateVersionLabels(localAppVersion);
 
     // ==========================================
@@ -628,7 +615,6 @@
       document.getElementById('dbStatus').innerHTML = '<span class="text-amber-600 font-semibold"><i class="fa-solid fa-circle-exclamation"></i> Menjalankan Mode Demo</span>';
     }
 
-    // Auto-update listener
     function initAppVersionListener() {
       if (!db) return;
 
@@ -649,7 +635,6 @@
         document.getElementById('inputVersionCode').value = serverVersion;
         document.getElementById('inputVersionChangelog').value = changelog;
 
-        // Bandingkan versi Firestore dengan versi di localStorage pengguna
         if (serverVersion && serverVersion !== localAppVersion) {
           pendingServerVersion = serverVersion;
           document.getElementById('newVersionText').innerText = serverVersion;
@@ -661,18 +646,15 @@
       });
     }
 
-    // FUNGSI EKSEKUSI UPDATE: Simpan versi baru, bersihkan cache, dan muat ulang otomatis
     async function applyAppUpdate() {
       const btn = document.getElementById('btnApplyUpdate');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memperbarui...';
       btn.disabled = true;
 
-      // 1. Simpan nomor versi baru ke localStorage
       if (pendingServerVersion) {
         localStorage.setItem('sibidan_app_version', pendingServerVersion);
       }
 
-      // 2. Bersihkan seluruh cache browser
       if ('caches' in window) {
         try {
           const names = await caches.keys();
@@ -684,7 +666,6 @@
         }
       }
 
-      // 3. Muat ulang halaman dengan parameter anti-cache
       const newUrl = window.location.origin + window.location.pathname + '?v=' + encodeURIComponent(pendingServerVersion || Date.now());
       window.location.replace(newUrl);
     }
@@ -716,7 +697,6 @@
           updatedAt: new Date().toISOString()
         });
         
-        // Admin sendiri langsung update versinya
         updateVersionLabels(newVer);
         alert(`Berhasil mempublikasikan ${newVer}. Seluruh pengguna yang sedang membuka aplikasi akan menerima notifikasi update!`);
       } catch (err) {
@@ -724,7 +704,6 @@
       }
     }
 
-    // Master Desa Listener
     function initMasterDesaListener() {
       if (!db) {
         masterDesaList = [...defaultDesaData];
@@ -780,10 +759,10 @@
       const uniqueRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
       uniqueRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
 
-      let optHTML = '<option value="">Semua Wilayah RT</option>';
+      let optHTML = '<option value="">Semua Wilayah RT/RW</option>';
       if (uniqueRTs.length > 0) {
         uniqueRTs.forEach(rt => {
-          optHTML += `<option value="${rt}">RT ${rt}</option>`;
+          optHTML += `<option value="${rt}">${rt.startsWith('0') || rt.includes('/') ? 'RT/RW ' + rt : 'RT ' + rt}</option>`;
         });
       } else {
         for (let i = 1; i <= 11; i++) {
@@ -795,7 +774,6 @@
       filterRT.value = curVal;
     }
 
-    // Auth Listener
     if (auth) {
       auth.onAuthStateChanged((user) => {
         currentUser = user;
@@ -827,7 +805,6 @@
       });
     }
 
-    // Listener Penduduk Realtime
     if (db) {
       db.collection("penduduk_puskesmas").onSnapshot((snapshot) => {
         allData = [];
@@ -897,12 +874,19 @@
         columns = masterDesaList.map(d => ({ key: d.id, label: d.nama.replace('Desa ', '') }));
       } else {
         const foundRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
-        foundRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+        foundRTs.sort((a, b) => {
+          const numA = parseInt(a.replace(/\D/g, '')) || 0;
+          const numB = parseInt(b.replace(/\D/g, '')) || 0;
+          return numA - numB;
+        });
         
         if (foundRTs.length === 0) {
           for (let i = 1; i <= 9; i++) foundRTs.push(String(i));
         }
-        columns = foundRTs.map(rt => ({ key: rt, label: `RT ${rt}` }));
+        columns = foundRTs.map(rt => {
+          const cleanLabel = rt.includes('/') ? `RT ${rt.split('/')[0]}` : `RT ${rt}`;
+          return { key: rt, label: cleanLabel };
+        });
       }
 
       Object.keys(metrics).forEach(k => {
@@ -1275,10 +1259,11 @@
           (p.nama && p.nama.toLowerCase().includes(keyword)) ||
           (p.nik && p.nik.toLowerCase().includes(keyword)) ||
           (p.no_kk && p.no_kk.toLowerCase().includes(keyword)) ||
-          (p.pekerjaan && p.pekerjaan.toLowerCase().includes(keyword))
+          (p.pekerjaan && p.pekerjaan.toLowerCase().includes(keyword)) ||
+          (p.rt && p.rt.toLowerCase().includes(keyword))
         );
 
-        const matchRT = rtFilter === "" || String(p.rt) === String(rtFilter);
+        const matchRT = rtFilter === "" || String(p.rt).trim() === String(rtFilter).trim();
 
         let matchTab = true;
         const usiaNum = parseInt(p.usia) || 0;
@@ -1327,7 +1312,7 @@
             <td class="py-3 px-3 text-center text-slate-400">${index + 1}</td>
             <td class="py-3 px-3">
               <div class="font-bold text-xs text-teal-800">${desaLabel}</div>
-              <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-800 mt-0.5 mb-1">RT ${item.rt || '-'}</span>
+              <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-800 mt-0.5 mb-1">${item.rt ? (item.rt.startsWith('0') || item.rt.includes('/') ? 'RT/RW ' + item.rt : 'RT ' + item.rt) : '-'}</span>
               <div class="text-[11px] text-slate-400">KK: ${displayedNoKK}</div>
             </td>
             <td class="py-3 px-3 font-semibold text-slate-800">
@@ -1387,7 +1372,7 @@
       document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen"></i> Edit Sasaran';
       document.getElementById('formDocId').value = item.id;
       document.getElementById('formDesa').value = getDesaClean(item);
-      document.getElementById('formRT').value = item.rt || '1';
+      document.getElementById('formRT').value = item.rt || '';
       document.getElementById('formNoKK').value = item.no_kk || '';
       document.getElementById('formNIK').value = item.nik || '';
       document.getElementById('formNama').value = item.nama || '';
@@ -1419,7 +1404,7 @@
       const usiaVal = document.getElementById('formUsia').value;
       const nikClean = document.getElementById('formNIK').value.replace(/['",\s]/g, '').trim();
       const namaClean = document.getElementById('formNama').value.trim();
-      const rtClean = document.getElementById('formRT').value;
+      const rtClean = document.getElementById('formRT').value.trim();
       const ttlClean = document.getElementById('formTTL').value.trim();
 
       const payload = {
@@ -1468,8 +1453,9 @@
             targetId = `${desaVal}_NIK_${nikClean}`;
           } else {
             const slugNama = namaClean.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            const slugRT = rtClean.replace(/[^a-zA-Z0-9]/g, '_');
             const slugTgl = ttlClean.replace(/[^a-zA-Z0-9]/g, '_');
-            targetId = `${desaVal}_RT${rtClean}_${slugNama}_${slugTgl}`;
+            targetId = `${desaVal}_RT${slugRT}_${slugNama}_${slugTgl}`;
           }
         }
 
@@ -1617,9 +1603,9 @@
               const rowNoKK = colMap.no_kk !== -1 && row[colMap.no_kk] ? String(row[colMap.no_kk]).replace(/['",\s]/g, '').trim() : '';
               if (rowNoKK && rowNoKK !== '-' && rowNoKK.length > 5) currentNoKK = rowNoKK;
 
-              const rowRT = colMap.rt !== -1 && row[colMap.rt] ? String(row[colMap.rt]).replace(/\D/g, '').trim() : '';
-              if (rowRT) {
-                currentRT = parseInt(rowRT) || rtFromSheet;
+              const rowRT = colMap.rt !== -1 && row[colMap.rt] ? String(row[colMap.rt]).trim() : '';
+              if (rowRT && rowRT !== '-' && rowRT !== '0') {
+                currentRT = rowRT;
               }
 
               const nik = colMap.nik !== -1 && row[colMap.nik] ? String(row[colMap.nik]).replace(/['",\s]/g, '').trim() : '';
@@ -1663,8 +1649,9 @@
                 docId = `${activeDesa}_NIK_${nik}`;
               } else {
                 const slugNama = namaRaw.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                const slugRT = String(currentRT).replace(/[^a-zA-Z0-9]/g, '_');
                 const slugTgl = tglLahir.replace(/[^a-zA-Z0-9]/g, '_');
-                docId = `${activeDesa}_RT${currentRT}_${slugNama}_${slugTgl}`;
+                docId = `${activeDesa}_RT${slugRT}_${slugNama}_${slugTgl}`;
               }
 
               if (uniqueKeys.has(docId)) continue;
@@ -1769,7 +1756,6 @@
 
       const wb = XLSX.utils.book_new();
 
-      // 1. Sheet Rekap
       const { columns, metrics } = calculateMatriksData();
       const rekapRows = Object.keys(metrics).map(k => {
         const item = metrics[k];
@@ -1783,17 +1769,20 @@
       const wsRekap = XLSX.utils.json_to_sheet(rekapRows);
       XLSX.utils.book_append_sheet(wb, wsRekap, "REKAP DATA 2026");
 
-      // 2. Sheet per Sub-Wilayah (Per RT jika 1 desa, atau per Desa jika global)
       if (!isGlobal) {
         const uniqueRTs = [...new Set(dataset.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
-        uniqueRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+        uniqueRTs.sort((a, b) => {
+          const numA = parseInt(a.replace(/\D/g, '')) || 0;
+          const numB = parseInt(b.replace(/\D/g, '')) || 0;
+          return numA - numB;
+        });
 
         uniqueRTs.forEach(rtNomor => {
           const wargaRT = dataset.filter(p => String(p.rt).trim() === String(rtNomor));
           if (wargaRT.length > 0) {
             const rowsRT = wargaRT.map((d, idx) => ({
               "NO": idx + 1,
-              "RT/RW/DUSUN": d.rt,
+              "RT/RW": d.rt,
               "WILAYAH DESA": getDesaNama(getDesaClean(d)),
               "NO KK": isLogin ? d.no_kk : maskSensitive(d.no_kk),
               "NIK": isLogin ? d.nik : maskSensitive(d.nik),
@@ -1815,7 +1804,8 @@
               "ALKI": isLogin ? (d.isALKI ? 1 : "") : "Terkunci"
             }));
             const wsRT = XLSX.utils.json_to_sheet(rowsRT);
-            XLSX.utils.book_append_sheet(wb, wsRT, `RT ${rtNomor}`);
+            const sheetTitle = (rtNomor.includes('/') ? `RT ${rtNomor.split('/')[0]}` : `RT ${rtNomor}`).substring(0, 31);
+            XLSX.utils.book_append_sheet(wb, wsRT, sheetTitle);
           }
         });
       } else {
@@ -1825,7 +1815,7 @@
             const rowsDesa = wargaDesa.map((p, idx) => ({
               "NO": idx + 1,
               "WILAYAH DESA": d.nama,
-              "RT": p.rt,
+              "RT/RW": p.rt,
               "NO KK": isLogin ? p.no_kk : maskSensitive(p.no_kk),
               "NIK": isLogin ? p.nik : maskSensitive(p.nik),
               "NAMA": p.nama,
