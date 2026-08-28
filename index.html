@@ -5,14 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SiBidan Terpadu - UPTD Puskesmas Sampanahan</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- SheetJS (xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <!-- Firebase SDK (v9 Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -37,7 +33,6 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- BANNER AUTO-UPDATE -->
   <div id="updateBanner" class="hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600 text-white shadow-lg sticky top-0 z-50 animate-slide-down border-b border-white/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
       <div class="flex items-center gap-2">
@@ -55,11 +50,9 @@
     </div>
   </div>
 
-  <!-- TOP NAVBAR -->
   <header class="bg-teal-700 text-white shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-3">
       
-      <!-- Brand & Versi -->
       <div class="flex items-center space-x-3">
         <div class="bg-white/10 p-2 rounded-xl backdrop-blur-sm">
           <i class="fa-solid fa-hospital text-2xl text-rose-300"></i>
@@ -73,14 +66,11 @@
         </div>
       </div>
       
-      <!-- Action Buttons & Auth -->
       <div class="flex items-center gap-2">
-        <!-- Tombol Matriks Rekapitulasi Sasaran -->
         <button onclick="openModalMatriks()" class="bg-teal-600/90 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm border border-teal-400/40">
           <i class="fa-solid fa-table-cells text-amber-300"></i> <span>Matriks Rekap Sasaran</span>
         </button>
 
-        <!-- Menu Khusus Petugas/Bidan (Admin) -->
         <div id="adminActions" class="hidden flex items-center gap-2">
           <button onclick="openModalDesa()" class="bg-teal-800 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm border border-teal-500">
             <i class="fa-solid fa-gears"></i> <span class="hidden md:inline">Kelola Desa & Sistem</span>
@@ -97,7 +87,6 @@
           <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
         </div>
 
-        <!-- Tombol Login / Logout -->
         <div id="authContainer">
           <button id="btnLoginModal" onclick="openLoginModal()" class="bg-white text-teal-800 hover:bg-teal-50 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm">
             <i class="fa-solid fa-right-to-bracket"></i> Login Bidan / Admin
@@ -117,10 +106,8 @@
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
 
-    <!-- WILAYAH KERJA & STATUS SELECTOR -->
     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
       <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -142,7 +129,6 @@
       </div>
     </div>
 
-    <!-- REKAP KARTU SASARAN PWS KIA / KB / POSYANDU -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
         <div class="text-slate-500 text-xs font-medium flex items-center justify-between">
@@ -193,7 +179,6 @@
       </div>
     </div>
 
-    <!-- FILTER & TABS SECTION -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
       <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         <button onclick="setTab('semua')" id="tab-semua" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white transition">
@@ -239,7 +224,6 @@
       </div>
     </div>
 
-    <!-- TABEL DATA SASARAN -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">
@@ -265,7 +249,6 @@
         </table>
       </div>
 
-      <!-- FOOTER -->
       <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-2">
         <span id="recordCount">Menampilkan 0 data</span>
         <div class="flex items-center gap-3">
@@ -277,11 +260,9 @@
     </div>
   </main>
 
-  <!-- MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN -->
   <div id="modalMatriks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4">
     <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-7xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
       
-      <!-- Header Modal -->
       <div class="p-4 sm:p-5 bg-white border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 no-print">
         <div>
           <h3 class="font-extrabold text-base sm:text-lg text-slate-800 tracking-tight" id="matriksModalTitle">DATA PENDUDUK DESA SAMPANAHAN HILIR</h3>
@@ -300,19 +281,15 @@
         </div>
       </div>
 
-      <!-- KONTEN TABEL MATRIKS -->
       <div class="p-3 sm:p-5 overflow-y-auto overflow-x-auto flex-1">
         <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm bg-white">
           <table class="w-full text-xs text-center border-collapse">
             <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b-2 border-slate-300" id="matriksTableHead">
-              <!-- Header bertingkat dirender otomatis -->
-            </thead>
+              </thead>
             <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700 text-xs">
-              <!-- Baris data RT 1..9 dirender otomatis -->
-            </tbody>
+              </tbody>
             <tfoot id="matriksTableFoot" class="bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300 text-xs">
-              <!-- Baris Jumlah Total -->
-            </tfoot>
+              </tfoot>
           </table>
         </div>
       </div>
@@ -324,7 +301,6 @@
     </div>
   </div>
 
-  <!-- MODAL LOGIN FIREBASE AUTH -->
   <div id="modalLogin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
@@ -359,7 +335,6 @@
     </div>
   </div>
 
-  <!-- MODAL KELOLA DESA & SISTEM VERSI -->
   <div id="modalKelolaDesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
@@ -373,7 +348,6 @@
       </div>
 
       <div class="p-6 space-y-6 overflow-y-auto flex-1">
-        <!-- Kontrol Auto-Update Versi -->
         <div class="p-4 bg-teal-50/70 border border-teal-200 rounded-xl space-y-3">
           <div class="flex items-center justify-between">
             <h4 class="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -402,7 +376,6 @@
           </form>
         </div>
 
-        <!-- Master Desa -->
         <div class="space-y-3">
           <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-map-location-dot text-teal-600"></i> Daftar Desa Binaan Puskesmas
@@ -424,8 +397,7 @@
                 </tr>
               </thead>
               <tbody id="listMasterDesaBody" class="divide-y divide-slate-200">
-                <!-- Render list desa -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </div>
@@ -437,7 +409,6 @@
     </div>
   </div>
 
-  <!-- MODAL FORM SASARAN (DENGAN AUTO-DETEKSI NIK & INPUT MANUAL RT/RW) -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center rounded-t-2xl">
@@ -456,8 +427,7 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Wilayah Desa</label>
             <select id="formDesa" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white font-medium">
-              <!-- Render opsi desa -->
-            </select>
+              </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RT/RW</label>
@@ -498,15 +468,22 @@
             <input type="text" id="formHubungan" placeholder="KK, ISTERI, ANAK, dll" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Usia / Bln</label>
-            <input type="text" id="formUsia" placeholder="Otomatis dari NIK (atau ketik)" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-medium bg-slate-50">
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1 flex items-center justify-between">
+              <span>Usia (Tahun / Bulan)</span>
+              <span id="usiaKetBadge" class="text-[10px] text-teal-700 font-bold">Otomatis</span>
+            </label>
+            <input type="text" id="formUsia" placeholder="Contoh: 28 atau 7 BULAN" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-medium bg-slate-50">
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tempat & Tanggal Lahir</label>
-            <input type="text" id="formTTL" placeholder="Kotabaru, 12/04/1995" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tempat Lahir</label>
+            <input type="text" id="formTempatLahir" placeholder="Contoh: Kotabaru" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tanggal Lahir</label>
+            <input type="date" id="formTglLahir" onchange="handleTglLahirChange(this.value)" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-medium bg-white">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Pekerjaan</label>
@@ -514,7 +491,6 @@
           </div>
         </div>
 
-        <!-- Status Sasaran KIA / KB -->
         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
           <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider">Status Sasaran KIA & BKKBN</h4>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -532,6 +508,9 @@
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" id="formRemaja" class="rounded text-indigo-600 focus:ring-indigo-500"> Remaja
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formPosbindu" class="rounded text-teal-600 focus:ring-teal-500"> Posbindu (15-59)
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" id="formLansia" class="rounded text-purple-600 focus:ring-purple-500"> Lansia (>60 th)
@@ -558,11 +537,39 @@
     </div>
   </div>
 
-  <!-- SCRIPT LOGIC & FIREBASE -->
   <script>
     // ==========================================
     // 0. AUTO-DETEKSI NIK UNTUK USIA, JK & STATUS
     // ==========================================
+    function calculateAgeFromDate(birthDateObj) {
+      if (!birthDateObj || isNaN(birthDateObj.getTime())) return null;
+
+      const now = new Date();
+      let ageYears = now.getFullYear() - birthDateObj.getFullYear();
+      let m = now.getMonth() - birthDateObj.getMonth();
+      let d = now.getDate() - birthDateObj.getDate();
+
+      if (m < 0 || (m === 0 && d < 0)) {
+        ageYears--;
+      }
+
+      let totalMonths = (now.getFullYear() - birthDateObj.getFullYear()) * 12 + (now.getMonth() - birthDateObj.getMonth());
+      if (d < 0) {
+        totalMonths--;
+      }
+
+      let ageText = String(ageYears);
+      if (ageYears < 1) {
+        ageText = `${Math.max(1, totalMonths)} BULAN`;
+      }
+
+      return {
+        ageYears: ageYears,
+        totalMonths: totalMonths,
+        ageText: ageText
+      };
+    }
+
     function parseNIK(nikRaw) {
       const nik = String(nikRaw).replace(/\D/g, '').trim();
       if (nik.length < 12) return null;
@@ -584,36 +591,23 @@
 
       const now = new Date();
       const curYear = now.getFullYear();
-      const curMonth = now.getMonth() + 1;
-      const curDay = now.getDate();
-
       const birthYear = (yearShort <= (curYear % 100)) ? (2000 + yearShort) : (1900 + yearShort);
-
-      let ageYears = curYear - birthYear;
-      if (curMonth < month || (curMonth === month && curDay < day)) {
-        ageYears--;
-      }
-
-      let totalMonths = (curYear - birthYear) * 12 + (curMonth - month);
-      if (curDay < day) {
-        totalMonths--;
-      }
 
       const formattedDay = day < 10 ? '0' + day : day;
       const formattedMonth = month < 10 ? '0' + month : month;
-      const ttlString = `${formattedDay}/${formattedMonth}/${birthYear}`;
+      const birthDateISO = `${birthYear}-${formattedMonth}-${formattedDay}`;
+      const birthDateObj = new Date(birthYear, month - 1, day);
 
-      let ageText = String(ageYears);
-      if (ageYears < 1) {
-        ageText = `${Math.max(1, totalMonths)} BULAN`;
-      }
+      const ageCalc = calculateAgeFromDate(birthDateObj);
+      if (!ageCalc) return null;
 
       return {
         gender: gender,
-        birthDate: ttlString,
-        ageYears: ageYears,
-        totalMonths: totalMonths,
-        ageText: ageText
+        birthDateISO: birthDateISO,
+        birthDateDisplay: `${formattedDay}/${formattedMonth}/${birthYear}`,
+        ageYears: ageCalc.ageYears,
+        totalMonths: ageCalc.totalMonths,
+        ageText: ageCalc.ageText
       };
     }
 
@@ -625,11 +619,7 @@
         badge.classList.remove('hidden');
         document.getElementById('formJK').value = parsed.gender;
         document.getElementById('formUsia').value = parsed.ageText;
-        
-        const currentTTL = document.getElementById('formTTL').value.trim();
-        if (!currentTTL || currentTTL.includes('/')) {
-          document.getElementById('formTTL').value = parsed.birthDate;
-        }
+        document.getElementById('formTglLahir').value = parsed.birthDateISO;
 
         const y = parsed.ageYears;
         const isFemale = (parsed.gender === 'P');
@@ -644,6 +634,29 @@
         }
       } else {
         badge.classList.add('hidden');
+      }
+    }
+
+    function handleTglLahirChange(val) {
+      if (!val) return;
+      const parts = val.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const ageCalc = calculateAgeFromDate(d);
+        if (ageCalc) {
+          document.getElementById('formUsia').value = ageCalc.ageText;
+          const y = ageCalc.ageYears;
+          const isFemale = document.getElementById('formJK').value === 'P';
+
+          document.getElementById('formBalita').checked = (y <= 5);
+          document.getElementById('formRemaja').checked = (y >= 10 && y <= 18);
+          document.getElementById('formPosbindu').checked = (y >= 15 && y <= 59);
+          document.getElementById('formLansia').checked = (y >= 60);
+          
+          if (isFemale && y >= 15 && y <= 49) {
+            document.getElementById('formWUS').checked = true;
+          }
+        }
       }
     }
 
@@ -665,7 +678,7 @@
     updateVersionLabels(localAppVersion);
 
     // ==========================================
-    // 2. KONFIGURASI FIREBASE PROJECT ANDA
+    // 2. KONFIGURASI FIREBASE PROJECT
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyDBmMLQzX6yQFGeqF46AZuPIUiNS5TuqAI",
@@ -980,8 +993,8 @@
         items.forEach(p => {
           if (p.no_kk && p.no_kk.length > 5) kkSet.add(p.no_kk);
 
-          const usiaNum = parseInt(p.usia) || 0;
-          const isBulan = p.usia_text && p.usia_text.toLowerCase().includes('bulan');
+          const isBulan = p.usia_text && String(p.usia_text).toLowerCase().includes('bulan');
+          const usiaNum = isBulan ? 0 : (parseInt(p.usia) || 0);
 
           if (p.jk === 'L') pnddk_l++;
           if (p.jk === 'P') pnddk_p++;
@@ -990,23 +1003,25 @@
             pus++;
             if (p.is4T) pus_4t++;
           }
-          if (p.isWUS || (p.jk === 'P' && usiaNum >= 15 && usiaNum <= 49)) wus++;
+          if (p.isWUS || (p.jk === 'P' && !isBulan && usiaNum >= 15 && usiaNum <= 49)) wus++;
           if (p.kb && p.kb.trim() !== '' && p.kb.trim() !== '-') kb++;
           if (p.isBumil) bumil++;
 
-          if (p.isBayi || (isBulan && parseInt(p.usia_text) <= 12) || (usiaNum < 1)) {
+          if (p.isBayi || (isBulan && parseInt(p.usia_text) <= 12) || (!isBulan && usiaNum < 1)) {
             bayi++;
-          } else if (p.isBalita || isBulan || (usiaNum >= 1 && usiaNum < 5)) {
+          } else if (p.isBalita || isBulan || (!isBulan && usiaNum >= 1 && usiaNum < 5)) {
             balita++;
-          } else if (usiaNum >= 5 && usiaNum <= 6) {
+          } else if (!isBulan && usiaNum >= 5 && usiaNum <= 6) {
             prasekolah++;
           }
 
-          if (usiaNum >= 45 && usiaNum <= 59) pra_lansia++;
-          if (usiaNum >= 60 && usiaNum <= 70) lansia_6070++;
-          if (usiaNum > 70) lansia_70++;
+          if (!isBulan) {
+            if (usiaNum >= 45 && usiaNum <= 59) pra_lansia++;
+            if (usiaNum >= 60 && usiaNum <= 70) lansia_6070++;
+            if (usiaNum > 70) lansia_70++;
+          }
 
-          if (p.isRemaja || (usiaNum >= 10 && usiaNum <= 18)) {
+          if (p.isRemaja || (!isBulan && usiaNum >= 10 && usiaNum <= 18)) {
             if (p.jk === 'L') remaja_l++;
             if (p.jk === 'P') remaja_p++;
           }
@@ -1147,7 +1162,6 @@
       `;
     }
 
-    // FUNGSI AUTO-FIT WIDTH UNTUK SHEET EXCEL
     function autoFitColumns(worksheet, jsonData) {
       if (!jsonData || jsonData.length === 0) return;
       const keys = Object.keys(jsonData[0]);
@@ -1412,7 +1426,7 @@
     }
 
     // ==========================================
-    // 6. DASHBOARD & FILTERING
+    // 6. DASHBOARD & FILTERING (LANSIA STERIL DARI BALITA)
     // ==========================================
     function updateDashboard() {
       const filteredByDesa = allData.filter(p => {
@@ -1424,11 +1438,14 @@
       let bumil = 0, balita = 0, kb = 0, risti = 0, lansia = 0;
 
       filteredByDesa.forEach(p => {
+        const isBulan = p.usia_text && String(p.usia_text).toLowerCase().includes('bulan');
+        const usiaNum = isBulan ? 0 : (parseInt(p.usia) || 0);
+
         if (p.isBumil) bumil++;
-        if (p.isBalita || (p.usia_text && p.usia_text.toLowerCase().includes('bulan'))) balita++;
+        if (p.isBalita || isBulan || (!isBulan && usiaNum <= 5)) balita++;
         if (p.kb && p.kb.trim() !== '' && p.kb.trim() !== '-') kb++;
         if (p.is4T || p.isALKI) risti++;
-        if (p.isLansia || parseInt(p.usia) >= 60) lansia++;
+        if (!isBulan && (p.isLansia || usiaNum >= 60)) lansia++;
       });
 
       document.getElementById('statTotal').innerText = total;
@@ -1471,13 +1488,23 @@
         const matchRT = rtFilter === "" || String(p.rt).trim() === String(rtFilter).trim();
 
         let matchTab = true;
-        const usiaNum = parseInt(p.usia) || 0;
-        if (currentTab === 'bumil') matchTab = p.isBumil;
-        else if (currentTab === 'balita') matchTab = p.isBalita || (p.usia_text && p.usia_text.toLowerCase().includes('bulan'));
-        else if (currentTab === 'pus_kb') matchTab = p.isPUS || (p.kb && p.kb !== '-');
-        else if (currentTab === 'remaja') matchTab = p.isRemaja || (usiaNum >= 10 && usiaNum <= 18);
-        else if (currentTab === 'posbindu') matchTab = p.isPosbindu || (usiaNum >= 15 && usiaNum <= 59);
-        else if (currentTab === 'lansia') matchTab = p.isLansia || usiaNum >= 60;
+        const isBulan = p.usia_text && String(p.usia_text).toLowerCase().includes('bulan');
+        const usiaNum = isBulan ? 0 : (parseInt(p.usia) || 0);
+
+        if (currentTab === 'bumil') {
+          matchTab = !!p.isBumil;
+        } else if (currentTab === 'balita') {
+          matchTab = p.isBalita || isBulan || (!isBulan && usiaNum <= 5);
+        } else if (currentTab === 'pus_kb') {
+          matchTab = p.isPUS || (p.kb && p.kb !== '-');
+        } else if (currentTab === 'remaja') {
+          matchTab = p.isRemaja || (!isBulan && usiaNum >= 10 && usiaNum <= 18);
+        } else if (currentTab === 'posbindu') {
+          matchTab = p.isPosbindu || (!isBulan && usiaNum >= 15 && usiaNum <= 59);
+        } else if (currentTab === 'lansia') {
+          // STERILKAN: Lansia hanya tampil jika bukan bulan & usia >= 60
+          matchTab = !isBulan && (p.isLansia || usiaNum >= 60);
+        }
 
         return matchSearch && matchRT && matchTab;
       });
@@ -1500,7 +1527,7 @@
       tbody.innerHTML = data.map((item, index) => {
         let badges = [];
         if (item.isBumil) badges.push('<span class="bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded text-[11px] font-bold">Bumil</span>');
-        if (item.isBalita || (item.usia_text && item.usia_text.toLowerCase().includes('bulan'))) badges.push('<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[11px] font-bold">Balita</span>');
+        if (item.isBalita || (item.usia_text && String(item.usia_text).toLowerCase().includes('bulan'))) badges.push('<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[11px] font-bold">Balita</span>');
         if (item.kb && item.kb !== '-') badges.push(`<span class="bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded text-[11px] font-bold">KB: ${item.kb}</span>`);
         
         if (isLogin) {
@@ -1527,7 +1554,7 @@
             </td>
             <td class="py-3 px-3 text-center">
               <span class="inline-block px-1.5 py-0.5 rounded text-xs font-bold ${item.jk === 'P' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">${item.jk || '-'}</span>
-              <div class="text-xs text-slate-600 mt-1">${item.usia_text || item.usia || '-'}</div>
+              <div class="text-xs text-slate-600 mt-1 font-medium">${item.usia_text || item.usia || '-'}</div>
             </td>
             <td class="py-3 px-3">
               <div class="font-medium text-slate-700">${item.hubungan || '-'}</div>
@@ -1554,7 +1581,7 @@
     }
 
     // ==========================================
-    // 7. CRUD DATA SASARAN
+    // 7. CRUD DATA SASARAN DENGAN TEMPAT/TGL LAHIR TERPISAH
     // ==========================================
     function openModalTambah() {
       if (!currentUser) return alert("Hanya petugas yang berhak menambah sasaran.");
@@ -1562,6 +1589,8 @@
       document.getElementById('pendudukForm').reset();
       document.getElementById('formDocId').value = '';
       document.getElementById('nikDetectBadge').classList.add('hidden');
+      document.getElementById('formTempatLahir').value = '';
+      document.getElementById('formTglLahir').value = '';
       document.getElementById('formDesa').value = (activeDesa !== 'ALL') ? activeDesa : (masterDesaList[0]?.id || 'SAMPANAHAN_HILIR');
       document.getElementById('modalForm').classList.remove('hidden');
     }
@@ -1585,15 +1614,31 @@
       document.getElementById('formJK').value = item.jk || 'L';
       document.getElementById('formHubungan').value = item.hubungan || '';
       document.getElementById('formUsia').value = item.usia_text || item.usia || '';
-      document.getElementById('formTTL').value = item.ttl || '';
       document.getElementById('formPekerjaan').value = item.pekerjaan || '';
       document.getElementById('formKB').value = item.kb || '';
+
+      // Pisahkan data tempat dan tanggal lahir bila ada
+      let tempat = item.tempat_lahir || '';
+      let tglIso = item.tgl_lahir_iso || '';
+
+      if (!tempat && item.ttl) {
+        if (item.ttl.includes(',')) {
+          const ttlParts = item.ttl.split(',');
+          tempat = ttlParts[0].trim();
+        } else {
+          tempat = item.ttl.trim();
+        }
+      }
+
+      document.getElementById('formTempatLahir').value = tempat;
+      document.getElementById('formTglLahir').value = tglIso;
 
       document.getElementById('formPUS').checked = !!item.isPUS;
       document.getElementById('formWUS').checked = !!item.isWUS;
       document.getElementById('formBumil').checked = !!item.isBumil;
       document.getElementById('formBalita').checked = !!item.isBalita;
       document.getElementById('formRemaja').checked = !!item.isRemaja;
+      document.getElementById('formPosbindu').checked = !!item.isPosbindu;
       document.getElementById('formLansia').checked = !!item.isLansia;
       document.getElementById('form4T').checked = !!item.is4T;
       document.getElementById('formALKI').checked = !!item.isALKI;
@@ -1608,11 +1653,29 @@
 
       const docId = document.getElementById('formDocId').value;
       const desaVal = document.getElementById('formDesa').value;
-      const usiaVal = document.getElementById('formUsia').value;
+      const usiaVal = document.getElementById('formUsia').value.trim();
       const nikClean = document.getElementById('formNIK').value.replace(/['",\s]/g, '').trim();
       const namaClean = document.getElementById('formNama').value.trim();
       const rtClean = document.getElementById('formRT').value.trim();
-      const ttlClean = document.getElementById('formTTL').value.trim();
+      
+      const tempatLahirVal = document.getElementById('formTempatLahir').value.trim();
+      const tglLahirVal = document.getElementById('formTglLahir').value; // format YYYY-MM-DD
+
+      let formattedTgl = '';
+      if (tglLahirVal) {
+        const p = tglLahirVal.split('-');
+        if (p.length === 3) formattedTgl = `${p[2]}/${p[1]}/${p[0]}`;
+      }
+
+      let ttlClean = '';
+      if (tempatLahirVal && formattedTgl) {
+        ttlClean = `${tempatLahirVal}, ${formattedTgl}`;
+      } else {
+        ttlClean = tempatLahirVal || formattedTgl;
+      }
+
+      const isBulan = usiaVal.toLowerCase().includes('bulan');
+      const usiaNumeric = isBulan ? 0 : (parseInt(usiaVal) || 0);
 
       const payload = {
         desa_id: desaVal,
@@ -1623,8 +1686,10 @@
         nama: namaClean,
         jk: document.getElementById('formJK').value,
         hubungan: document.getElementById('formHubungan').value.trim(),
-        usia: parseInt(usiaVal) || 0,
+        usia: usiaNumeric,
         usia_text: usiaVal,
+        tempat_lahir: tempatLahirVal,
+        tgl_lahir_iso: tglLahirVal,
         ttl: ttlClean,
         pekerjaan: document.getElementById('formPekerjaan').value.trim(),
         kb: document.getElementById('formKB').value.trim(),
@@ -1633,6 +1698,7 @@
         isBumil: document.getElementById('formBumil').checked,
         isBalita: document.getElementById('formBalita').checked,
         isRemaja: document.getElementById('formRemaja').checked,
+        isPosbindu: document.getElementById('formPosbindu').checked,
         isLansia: document.getElementById('formLansia').checked,
         is4T: document.getElementById('form4T').checked,
         isALKI: document.getElementById('formALKI').checked,
@@ -1839,13 +1905,16 @@
               const ristiALKI = getVal(colMap.ristiALKI);
               const posbinduVal = getVal(colMap.posbindu);
 
+              const isBulanFromExcel = usiaRaw.toLowerCase().includes('bulan');
+              const usiaNumericExcel = isBulanFromExcel ? 0 : (parseInt(usiaRaw) || 0);
+
               const isPUS = pusVal !== '' && pusVal !== '-' && pusVal !== '0';
               const isWUS = wusVal !== '' && wusVal !== '-' && wusVal !== '0';
               const isBumil = bumilVal !== '' && bumilVal !== '-' && bumilVal !== '0';
               const isBayi = bayiVal !== '' && bayiVal !== '-' && bayiVal !== '0';
-              const isBalita = (balitaVal !== '' && balitaVal !== '-' && balitaVal !== '0') || isBayi || (usiaRaw.toLowerCase().includes('bulan'));
-              const isLansia = (lansia6070 !== '' && lansia6070 !== '-') || (lansia70 !== '' && lansia70 !== '-') || (parseInt(usiaRaw) >= 60);
-              const isRemaja = (remajaVal !== '' && remajaVal !== '-') || (parseInt(usiaRaw) >= 10 && parseInt(usiaRaw) <= 18);
+              const isBalita = (balitaVal !== '' && balitaVal !== '-' && balitaVal !== '0') || isBayi || isBulanFromExcel || (!isBulanFromExcel && usiaNumericExcel <= 5);
+              const isLansia = !isBulanFromExcel && ((lansia6070 !== '' && lansia6070 !== '-') || (lansia70 !== '' && lansia70 !== '-') || (usiaNumericExcel >= 60));
+              const isRemaja = (remajaVal !== '' && remajaVal !== '-') || (!isBulanFromExcel && usiaNumericExcel >= 10 && usiaNumericExcel <= 18);
               const is4T = risti4T !== '' && risti4T !== '-' && risti4T !== '0';
               const isALKI = ristiALKI !== '' && ristiALKI !== '-' && ristiALKI !== '0';
               const isPosbindu = posbinduVal !== '' && posbinduVal !== '-' && posbinduVal !== '0';
@@ -1874,9 +1943,10 @@
                 nama: namaRaw,
                 jk: jk,
                 hubungan: hubungan,
+                tempat_lahir: tempatLahir,
                 ttl: tempatLahir ? (tglLahir ? `${tempatLahir}, ${tglLahir}` : tempatLahir) : tglLahir,
                 usia_text: usiaRaw,
-                usia: parseInt(usiaRaw) || 0,
+                usia: usiaNumericExcel,
                 pekerjaan: pekerjaan,
                 isPUS: isPUS,
                 isWUS: isWUS,
