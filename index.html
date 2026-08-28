@@ -30,7 +30,7 @@
     @media print {
       body * { visibility: hidden; }
       #modalMatriksContent, #modalMatriksContent * { visibility: visible; }
-      #modalMatriksContent { position: absolute; left: 0; top: 0; width: 100%; }
+      #modalMatriksContent { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; }
       .no-print { display: none !important; }
     }
   </style>
@@ -75,9 +75,9 @@
       
       <!-- Action Buttons & Auth -->
       <div class="flex items-center gap-2">
-        <!-- Tombol Matriks Rekap Desa -->
-        <button onclick="openModalMatriks()" class="bg-teal-600/80 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm border border-teal-400/40">
-          <i class="fa-solid fa-table-cells-large text-amber-300"></i> <span>Matriks Rekap Desa</span>
+        <!-- Tombol Matriks Rekapitulasi Sasaran -->
+        <button onclick="openModalMatriks()" class="bg-teal-600/90 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm border border-teal-400/40">
+          <i class="fa-solid fa-table-cells text-amber-300"></i> <span>Matriks Rekap Sasaran</span>
         </button>
 
         <!-- Menu Khusus Petugas/Bidan (Admin) -->
@@ -277,48 +277,48 @@
     </div>
   </main>
 
-  <!-- MODAL MATRIKS REKAPAN DESA -->
+  <!-- MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN (SESUAI GAMBAR) -->
   <div id="modalMatriks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4">
-    <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-6xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
-      <div class="p-4 sm:p-5 bg-teal-800 text-white flex justify-between items-center no-print">
-        <div class="flex items-center gap-2 sm:gap-3">
-          <div class="p-2 bg-white/10 rounded-lg">
-            <i class="fa-solid fa-table-cells-large text-amber-300 text-xl"></i>
-          </div>
-          <div>
-            <h3 class="font-bold text-base sm:text-lg leading-tight" id="matriksModalTitle">Matriks Rekapitulasi Data Sasaran Desa</h3>
-            <p class="text-xs text-teal-200" id="matriksModalSubtitle">Tahun 2026 - Wilayah Kerja Puskesmas Sampanahan</p>
-          </div>
+    <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-7xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      
+      <!-- Header Modal -->
+      <div class="p-4 sm:p-5 bg-white border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 no-print">
+        <div>
+          <h3 class="font-extrabold text-base sm:text-lg text-slate-800 tracking-tight" id="matriksModalTitle">DATA PENDUDUK DESA SAMPANAHAN HILIR</h3>
+          <p class="text-xs font-semibold text-teal-700 uppercase tracking-wider" id="matriksModalSubtitle">REKAPITULASI SASARAN KESEHATAN TAHUN 2026</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="window.print()" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border border-teal-500 shadow-sm">
+          <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border border-slate-300 shadow-sm">
             <i class="fa-solid fa-print"></i> Cetak
           </button>
           <button onclick="exportMatriksToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-file-excel"></i> Ekspor Excel
           </button>
-          <button onclick="closeModalMatriks()" class="text-teal-200 hover:text-white p-1 text-xl transition">
+          <button onclick="closeModalMatriks()" class="text-slate-400 hover:text-slate-600 p-1 text-xl transition">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
       </div>
 
-      <!-- KONTEN TABEL MATRIKS -->
-      <div class="p-4 sm:p-6 overflow-y-auto overflow-x-auto flex-1 space-y-4">
-        <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm">
+      <!-- KONTEN TABEL MATRIKS STANDAR GAMBAR -->
+      <div class="p-3 sm:p-5 overflow-y-auto overflow-x-auto flex-1">
+        <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm bg-white">
           <table class="w-full text-xs text-center border-collapse">
-            <thead class="bg-teal-900 text-white uppercase font-bold text-[11px] tracking-wider" id="matriksTableHead">
-              <!-- Header dirender dinamis -->
+            <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b-2 border-slate-300" id="matriksTableHead">
+              <!-- Header bertingkat dirender otomatis -->
             </thead>
-            <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700">
-              <!-- Matriks dirender secara realtime -->
+            <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700 text-xs">
+              <!-- Baris data RT 1..9 dirender otomatis -->
             </tbody>
+            <tfoot id="matriksTableFoot" class="bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300 text-xs">
+              <!-- Baris Jumlah Total -->
+            </tfoot>
           </table>
         </div>
       </div>
 
       <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 no-print">
-        <span>* Data matriks otomatis terhitung langsung dari database sesuai desa yang dipilih.</span>
+        <span>* Data matriks otomatis dihitung langsung dari basis data desa yang aktif.</span>
         <button onclick="closeModalMatriks()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition">Tutup</button>
       </div>
     </div>
@@ -437,7 +437,7 @@
     </div>
   </div>
 
-  <!-- MODAL FORM SASARAN (DENGAN AUTO-DETEKSI NIK) -->
+  <!-- MODAL FORM SASARAN (DENGAN AUTO-DETEKSI NIK & INPUT MANUAL RT/RW) -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center rounded-t-2xl">
@@ -472,7 +472,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <!-- INPUT NIK DENGAN LISTENER AUTO-DETEKSI USIA, JK & PROGRAM -->
+            <!-- INPUT NIK DENGAN LISTENER AUTO-DETEKSI -->
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1 flex items-center justify-between">
               <span>NIK (16 Digit)</span>
               <span id="nikDetectBadge" class="hidden text-[10px] text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded font-normal border border-teal-200">
@@ -584,13 +584,11 @@
       }
       if (day < 1 || day > 31) return null;
 
-      // Tahun saat ini (2026)
       const now = new Date();
       const curYear = now.getFullYear();
       const curMonth = now.getMonth() + 1;
       const curDay = now.getDate();
 
-      // Heuristik abad: jika 2 digit <= tahun saat ini (26) maka 2000-an, jika > 26 maka 1900-an
       const birthYear = (yearShort <= (curYear % 100)) ? (2000 + yearShort) : (1900 + yearShort);
 
       let ageYears = curYear - birthYear;
@@ -635,7 +633,6 @@
           document.getElementById('formTTL').value = parsed.birthDate;
         }
 
-        // Auto Centang Kategori KIA & KB
         const y = parsed.ageYears;
         const isFemale = (parsed.gender === 'P');
 
@@ -794,7 +791,7 @@
         });
         
         updateVersionLabels(newVer);
-        alert(`Berhasil mempublikasikan ${newVer}. Seluruh pengguna yang sedang membuka aplikasi akan menerima notifikasi update!`);
+        alert(`Berhasil mempublikasikan ${newVer}. Seluruh pengguna akan menerima notifikasi update!`);
       } catch (err) {
         alert("Gagal mempublikasikan versi: " + err.message);
       }
@@ -921,11 +918,13 @@
     initAppVersionListener();
 
     // ==========================================
-    // 3. MODAL MATRIKS REKAPAN AUTO-ADAPTIF
+    // 3. MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN (SESUAI GAMBAR)
     // ==========================================
     function openModalMatriks() {
-      const namaDesa = activeDesa === 'ALL' ? 'Seluruh Wilayah Puskesmas' : getDesaNama(activeDesa);
-      document.getElementById('matriksModalTitle').innerText = `Matriks Rekapitulasi Data Sasaran - ${namaDesa}`;
+      const isGlobal = (activeDesa === 'ALL');
+      const namaDesa = isGlobal ? 'SELURUH WILAYAH PUSKESMAS' : getDesaNama(activeDesa).toUpperCase();
+      document.getElementById('matriksModalTitle').innerText = `DATA PENDUDUK ${namaDesa}`;
+      document.getElementById('matriksModalSubtitle').innerText = `REKAPITULASI SASARAN KESEHATAN TAHUN 2026`;
       renderMatriksTable();
       document.getElementById('modalMatriks').classList.remove('hidden');
     }
@@ -934,6 +933,7 @@
       document.getElementById('modalMatriks').classList.add('hidden');
     }
 
+    // Fungsi Kalkulasi Matriks Baris per RT / Desa
     function calculateMatriksData() {
       const isGlobal = (activeDesa === 'ALL');
       let targetData = allData;
@@ -941,37 +941,14 @@
         targetData = allData.filter(p => getDesaClean(p) === activeDesa);
       }
 
-      const metrics = {
-        kk: { label: "JUMLAH KEPALA KELUARGA (KK)", cols: {}, total: 0, isHeader: true },
-        jiwa_l: { label: "Jumlah Penduduk Laki-laki (L)", cols: {}, total: 0 },
-        jiwa_p: { label: "Jumlah Penduduk Perempuan (P)", cols: {}, total: 0 },
-        jiwa_total: { label: "TOTAL JUMLAH PENDUDUK", cols: {}, total: 0, isHighlight: true },
-        pus: { label: "Pasangan Usia Subur (PUS)", cols: {}, total: 0 },
-        wus: { label: "Wanita Usia Subur (WUS)", cols: {}, total: 0 },
-        bumil: { label: "Ibu Hamil (Bumil)", cols: {}, total: 0, isHeader: true },
-        bayi: { label: "Bayi (<1 Tahun)", cols: {}, total: 0 },
-        balita: { label: "Anak Balita (1 - 5 Tahun)", cols: {}, total: 0 },
-        remaja: { label: "Remaja (10 - 18 Tahun)", cols: {}, total: 0 },
-        posbindu: { label: "Posbindu PTM (15 - 59 Tahun)", cols: {}, total: 0 },
-        pralansia: { label: "Pra Lansia (45 - 60 Tahun)", cols: {}, total: 0 },
-        lansia_6070: { label: "Lansia (>60 - 70 Tahun)", cols: {}, total: 0 },
-        lansia_70: { label: "Lansia (>70 Tahun)", cols: {}, total: 0 },
-        kb_suntik: { label: "Akseptor KB: Suntik", cols: {}, total: 0, isHeader: true },
-        kb_pil: { label: "Akseptor KB: Pil", cols: {}, total: 0 },
-        kb_implan: { label: "Akseptor KB: Implan", cols: {}, total: 0 },
-        kb_iud: { label: "Akseptor KB: IUD", cols: {}, total: 0 },
-        kb_mow: { label: "Akseptor KB: MOW", cols: {}, total: 0 },
-        kb_mop: { label: "Akseptor KB: MOP", cols: {}, total: 0 },
-        kb_kondom: { label: "Akseptor KB: Kondom", cols: {}, total: 0 },
-        kb_total: { label: "TOTAL PESERTA KB AKTIF", cols: {}, total: 0, isHighlight: true },
-        risti_4t: { label: "Risiko Tinggi 4T (Kehamilan)", cols: {}, total: 0, isDanger: true },
-        risti_alki: { label: "Risiko ALKI", cols: {}, total: 0, isDanger: true }
-      };
-
-      let columns = [];
+      let rowGroups = [];
 
       if (isGlobal) {
-        columns = masterDesaList.map(d => ({ key: d.id, label: d.nama.replace('Desa ', '') }));
+        rowGroups = masterDesaList.map((d, idx) => ({
+          key: d.id,
+          no: idx + 1,
+          label: d.nama
+        }));
       } else {
         const foundRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
         foundRTs.sort((a, b) => {
@@ -979,143 +956,261 @@
           const numB = parseInt(b.replace(/\D/g, '')) || 0;
           return numA - numB;
         });
-        
+
         if (foundRTs.length === 0) {
           for (let i = 1; i <= 9; i++) foundRTs.push(String(i));
         }
-        columns = foundRTs.map(rt => {
-          const cleanLabel = rt.includes('/') ? `RT ${rt.split('/')[0]}` : `RT ${rt}`;
-          return { key: rt, label: cleanLabel };
-        });
+
+        rowGroups = foundRTs.map((rt, idx) => ({
+          key: rt,
+          no: idx + 1,
+          label: rt.includes('/') ? `RT ${rt.split('/')[0]}` : (rt.startsWith('0') ? `RT ${parseInt(rt)}` : `RT ${rt}`)
+        }));
       }
 
-      Object.keys(metrics).forEach(k => {
-        columns.forEach(c => { metrics[k].cols[c.key] = 0; });
+      // Inisialisasi Rekap per Baris
+      const rowsData = rowGroups.map(group => {
+        const items = targetData.filter(p => {
+          return isGlobal ? (getDesaClean(p) === group.key) : (String(p.rt).trim() === group.key);
+        });
+
+        const kkSet = new Set();
+        let pnddk_l = 0, pnddk_p = 0;
+        let pus = 0, pus_4t = 0, wus = 0, kb = 0, bumil = 0;
+        let bayi = 0, balita = 0, prasekolah = 0, pra_lansia = 0;
+        let lansia_6070 = 0, lansia_70 = 0;
+        let remaja_l = 0, remaja_p = 0;
+
+        items.forEach(p => {
+          if (p.no_kk && p.no_kk.length > 5) kkSet.add(p.no_kk);
+
+          const usiaNum = parseInt(p.usia) || 0;
+          const isBulan = p.usia_text && p.usia_text.toLowerCase().includes('bulan');
+
+          if (p.jk === 'L') pnddk_l++;
+          if (p.jk === 'P') pnddk_p++;
+
+          if (p.isPUS) {
+            pus++;
+            if (p.is4T) pus_4t++;
+          }
+          if (p.isWUS || (p.jk === 'P' && usiaNum >= 15 && usiaNum <= 49)) wus++;
+          if (p.kb && p.kb.trim() !== '' && p.kb.trim() !== '-') kb++;
+          if (p.isBumil) bumil++;
+
+          if (p.isBayi || (isBulan && parseInt(p.usia_text) <= 12) || (usiaNum < 1)) {
+            bayi++;
+          } else if (p.isBalita || isBulan || (usiaNum >= 1 && usiaNum < 5)) {
+            balita++;
+          } else if (usiaNum >= 5 && usiaNum <= 6) {
+            prasekolah++;
+          }
+
+          if (usiaNum >= 45 && usiaNum <= 59) pra_lansia++;
+          if (usiaNum >= 60 && usiaNum <= 70) lansia_6070++;
+          if (usiaNum > 70) lansia_70++;
+
+          if (p.isRemaja || (usiaNum >= 10 && usiaNum <= 18)) {
+            if (p.jk === 'L') remaja_l++;
+            if (p.jk === 'P') remaja_p++;
+          }
+        });
+
+        return {
+          no: group.no,
+          label: group.label,
+          pnddk_l,
+          pnddk_p,
+          pnddk_total: pnddk_l + pnddk_p,
+          jml_kk: kkSet.size,
+          pus,
+          pus_4t,
+          wus,
+          kb,
+          bumil,
+          bayi,
+          balita,
+          prasekolah,
+          pra_lansia,
+          lansia_6070,
+          lansia_70,
+          remaja_l,
+          remaja_p,
+          remaja_total: remaja_l + remaja_p
+        };
       });
 
-      const kkSets = {};
-      columns.forEach(c => { kkSets[c.key] = new Set(); });
+      // Hitung Jumlah Total Baris Bawah
+      const totalSummary = {
+        pnddk_l: rowsData.reduce((acc, r) => acc + r.pnddk_l, 0),
+        pnddk_p: rowsData.reduce((acc, r) => acc + r.pnddk_p, 0),
+        pnddk_total: rowsData.reduce((acc, r) => acc + r.pnddk_total, 0),
+        jml_kk: rowsData.reduce((acc, r) => acc + r.jml_kk, 0),
+        pus: rowsData.reduce((acc, r) => acc + r.pus, 0),
+        pus_4t: rowsData.reduce((acc, r) => acc + r.pus_4t, 0),
+        wus: rowsData.reduce((acc, r) => acc + r.wus, 0),
+        kb: rowsData.reduce((acc, r) => acc + r.kb, 0),
+        bumil: rowsData.reduce((acc, r) => acc + r.bumil, 0),
+        bayi: rowsData.reduce((acc, r) => acc + r.bayi, 0),
+        balita: rowsData.reduce((acc, r) => acc + r.balita, 0),
+        prasekolah: rowsData.reduce((acc, r) => acc + r.prasekolah, 0),
+        pra_lansia: rowsData.reduce((acc, r) => acc + r.pra_lansia, 0),
+        lansia_6070: rowsData.reduce((acc, r) => acc + r.lansia_6070, 0),
+        lansia_70: rowsData.reduce((acc, r) => acc + r.lansia_70, 0),
+        remaja_l: rowsData.reduce((acc, r) => acc + r.remaja_l, 0),
+        remaja_p: rowsData.reduce((acc, r) => acc + r.remaja_p, 0),
+        remaja_total: rowsData.reduce((acc, r) => acc + r.remaja_total, 0)
+      };
 
-      targetData.forEach(p => {
-        const colKey = isGlobal ? getDesaClean(p) : String(p.rt).trim();
-        if (!columns.some(c => c.key === colKey)) return;
-
-        if (p.no_kk && p.no_kk.length > 5) {
-          kkSets[colKey].add(p.no_kk);
-        }
-
-        const usiaNum = parseInt(p.usia) || 0;
-        const isBulan = p.usia_text && p.usia_text.toLowerCase().includes('bulan');
-
-        if (p.jk === 'L') metrics.jiwa_l.cols[colKey]++;
-        if (p.jk === 'P') metrics.jiwa_p.cols[colKey]++;
-        metrics.jiwa_total.cols[colKey]++;
-
-        if (p.isPUS) metrics.pus.cols[colKey]++;
-        if (p.isWUS) metrics.wus.cols[colKey]++;
-        if (p.isBumil) metrics.bumil.cols[colKey]++;
-        
-        if (p.isBayi || (isBulan && parseInt(p.usia_text) <= 12)) {
-          metrics.bayi.cols[colKey]++;
-        } else if (p.isBalita || isBulan || (usiaNum >= 1 && usiaNum <= 5)) {
-          metrics.balita.cols[colKey]++;
-        }
-
-        if (p.isRemaja || (usiaNum >= 10 && usiaNum <= 18)) metrics.remaja.cols[colKey]++;
-        if (p.isPosbindu || (usiaNum >= 15 && usiaNum <= 59)) metrics.posbindu.cols[colKey]++;
-        if (usiaNum >= 45 && usiaNum <= 60) metrics.pralansia.cols[colKey]++;
-        if (usiaNum > 60 && usiaNum <= 70) metrics.lansia_6070.cols[colKey]++;
-        if (usiaNum > 70) metrics.lansia_70.cols[colKey]++;
-
-        const kbClean = (p.kb || '').toUpperCase();
-        if (kbClean.includes('SUNTIK')) { metrics.kb_suntik.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
-        else if (kbClean.includes('PIL')) { metrics.kb_pil.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
-        else if (kbClean.includes('IMPLAN')) { metrics.kb_implan.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
-        else if (kbClean.includes('IUD')) { metrics.kb_iud.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
-        else if (kbClean.includes('MOW')) { metrics.kb_mow.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
-        else if (kbClean.includes('MOP')) { metrics.kb_mop.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
-        else if (kbClean.includes('KONDOM')) { metrics.kb_kondom.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
-        else if (kbClean !== '' && kbClean !== '-') { metrics.kb_total.cols[colKey]++; }
-
-        if (p.is4T) metrics.risti_4t.cols[colKey]++;
-        if (p.isALKI) metrics.risti_alki.cols[colKey]++;
-      });
-
-      columns.forEach(c => {
-        metrics.kk.cols[c.key] = kkSets[c.key].size;
-      });
-
-      Object.keys(metrics).forEach(k => {
-        let sum = 0;
-        columns.forEach(c => { sum += metrics[k].cols[c.key]; });
-        metrics[k].total = sum;
-      });
-
-      return { isGlobal, columns, metrics };
+      return { isGlobal, rowsData, totalSummary };
     }
 
     function renderMatriksTable() {
-      const { isGlobal, columns, metrics } = calculateMatriksData();
+      const { isGlobal, rowsData, totalSummary } = calculateMatriksData();
       const thead = document.getElementById('matriksTableHead');
       const tbody = document.getElementById('matriksTableBody');
+      const tfoot = document.getElementById('matriksTableFoot');
 
-      const subTitleCols = isGlobal ? 'Rincian Desa Binaan Puskesmas' : 'Rincian Wilayah Rukun Tetangga (RT)';
+      const wilayahColTitle = isGlobal ? 'DESA' : 'DESA / RT';
+
+      // 1. Header Bertingkat Persis Gambar
       thead.innerHTML = `
-        <tr class="divide-x divide-teal-800">
-          <th rowspan="2" class="p-2.5 bg-teal-950 text-left min-w-[150px]">Kategori Sasaran</th>
-          <th colspan="${columns.length}" class="p-2 border-b border-teal-800 text-teal-200">${subTitleCols}</th>
-          <th rowspan="2" class="p-2.5 bg-teal-950 min-w-[75px] text-amber-300 font-extrabold">TOTAL</th>
+        <tr class="divide-x divide-slate-200">
+          <th rowspan="2" class="p-2 w-10">NO</th>
+          <th rowspan="2" class="p-2 min-w-[90px]">${wilayahColTitle}</th>
+          <th colspan="3" class="p-1.5 bg-blue-50/70 text-blue-900 border-b border-slate-200">JMLH PNDDK</th>
+          <th rowspan="2" class="p-2">JMLH KK</th>
+          <th rowspan="2" class="p-2">PUS</th>
+          <th rowspan="2" class="p-2">PUS 4T</th>
+          <th rowspan="2" class="p-2">WUS</th>
+          <th rowspan="2" class="p-2">KB</th>
+          <th rowspan="2" class="p-2 text-emerald-800 bg-emerald-50/50">IBU HAMIL</th>
+          <th rowspan="2" class="p-2">BAYI</th>
+          <th rowspan="2" class="p-2">BALITA</th>
+          <th rowspan="2" class="p-2">PRASEKOLAH</th>
+          <th rowspan="2" class="p-2">PRA LANSIA</th>
+          <th rowspan="2" class="p-2">LANSIA 60-70</th>
+          <th rowspan="2" class="p-2">LANSIA >70</th>
+          <th colspan="3" class="p-1.5 bg-indigo-50/70 text-indigo-900 border-b border-slate-200">REMAJA</th>
         </tr>
-        <tr class="divide-x divide-teal-800 bg-teal-800 text-[10px]">
-          ${columns.map(c => `<th class="p-1.5 min-w-[45px]">${c.label}</th>`).join('')}
+        <tr class="divide-x divide-slate-200 text-[10px] bg-slate-50">
+          <th class="p-1 w-9 text-blue-600 font-bold">L</th>
+          <th class="p-1 w-9 text-pink-600 font-bold">P</th>
+          <th class="p-1 w-11 font-extrabold text-slate-900">TOTAL</th>
+          <th class="p-1 w-9 text-blue-600 font-bold">L</th>
+          <th class="p-1 w-9 text-pink-600 font-bold">P</th>
+          <th class="p-1 w-11 font-extrabold text-slate-900">TOTAL</th>
         </tr>
       `;
 
-      tbody.innerHTML = Object.keys(metrics).map(k => {
-        const item = metrics[k];
-        let rowClass = "hover:bg-teal-50/60 transition";
-        let labelClass = "text-left font-medium";
+      // 2. Body Baris RT / Desa
+      tbody.innerHTML = rowsData.map(r => `
+        <tr class="hover:bg-slate-50 transition divide-x divide-slate-200">
+          <td class="p-2 text-slate-400 font-medium">${r.no}</td>
+          <td class="p-2 font-bold text-slate-800 text-left">${r.label}</td>
+          <td class="p-2 text-blue-600 font-semibold">${r.pnddk_l}</td>
+          <td class="p-2 text-pink-600 font-semibold">${r.pnddk_p}</td>
+          <td class="p-2 font-extrabold text-slate-900 bg-slate-50/50">${r.pnddk_total}</td>
+          <td class="p-2 font-medium">${r.jml_kk}</td>
+          <td class="p-2">${r.pus}</td>
+          <td class="p-2 text-rose-700 font-semibold">${r.pus_4t}</td>
+          <td class="p-2">${r.wus}</td>
+          <td class="p-2">${r.kb}</td>
+          <td class="p-2 font-bold text-emerald-700 bg-emerald-50/40">${r.bumil}</td>
+          <td class="p-2">${r.bayi}</td>
+          <td class="p-2 font-medium">${r.balita}</td>
+          <td class="p-2">${r.prasekolah}</td>
+          <td class="p-2">${r.pra_lansia}</td>
+          <td class="p-2">${r.lansia_6070}</td>
+          <td class="p-2">${r.lansia_70}</td>
+          <td class="p-2 text-blue-600 font-medium">${r.remaja_l}</td>
+          <td class="p-2 text-pink-600 font-medium">${r.remaja_p}</td>
+          <td class="p-2 font-extrabold text-slate-900 bg-slate-50/50">${r.remaja_total}</td>
+        </tr>
+      `).join('');
 
-        if (item.isHighlight) {
-          rowClass = "bg-amber-50/80 font-bold hover:bg-amber-100/70 text-slate-900";
-        } else if (item.isHeader) {
-          rowClass = "bg-slate-100/90 font-semibold text-teal-900 border-t-2 border-slate-300";
-        } else if (item.isDanger) {
-          rowClass = "bg-rose-50/50 hover:bg-rose-100/50 text-rose-900 font-medium";
-        }
-
-        const colsHTML = columns.map(c => `
-          <td class="p-2 border-x border-slate-200">${item.cols[c.key] === 0 ? '<span class="text-slate-300">-</span>' : item.cols[c.key]}</td>
-        `).join('');
-
-        return `
-          <tr class="${rowClass}">
-            <td class="p-2.5 border-r border-slate-300 ${labelClass}">${item.label}</td>
-            ${colsHTML}
-            <td class="p-2 font-bold bg-slate-100 border-l border-slate-300 text-teal-900">${item.total === 0 ? '<span class="text-slate-300">-</span>' : item.total}</td>
-          </tr>
-        `;
-      }).join('');
+      // 3. Footer Baris Jumlah Total
+      tfoot.innerHTML = `
+        <tr class="divide-x divide-slate-300">
+          <td colspan="2" class="p-2.5 text-center font-extrabold text-slate-900 uppercase">JUMLAH TOTAL</td>
+          <td class="p-2 text-blue-700 font-extrabold">${totalSummary.pnddk_l}</td>
+          <td class="p-2 text-pink-700 font-extrabold">${totalSummary.pnddk_p}</td>
+          <td class="p-2 font-black text-slate-900 bg-slate-200/60">${totalSummary.pnddk_total}</td>
+          <td class="p-2 font-extrabold">${totalSummary.jml_kk}</td>
+          <td class="p-2 font-extrabold">${totalSummary.pus}</td>
+          <td class="p-2 font-extrabold text-rose-800">${totalSummary.pus_4t}</td>
+          <td class="p-2 font-extrabold">${totalSummary.wus}</td>
+          <td class="p-2 font-extrabold">${totalSummary.kb}</td>
+          <td class="p-2 font-black text-emerald-800 bg-emerald-100/60">${totalSummary.bumil}</td>
+          <td class="p-2 font-extrabold">${totalSummary.bayi}</td>
+          <td class="p-2 font-extrabold">${totalSummary.balita}</td>
+          <td class="p-2 font-extrabold">${totalSummary.prasekolah}</td>
+          <td class="p-2 font-extrabold">${totalSummary.pra_lansia}</td>
+          <td class="p-2 font-extrabold">${totalSummary.lansia_6070}</td>
+          <td class="p-2 font-extrabold">${totalSummary.lansia_70}</td>
+          <td class="p-2 text-blue-700 font-extrabold">${totalSummary.remaja_l}</td>
+          <td class="p-2 text-pink-700 font-extrabold">${totalSummary.remaja_p}</td>
+          <td class="p-2 font-black text-slate-900 bg-slate-200/60">${totalSummary.remaja_total}</td>
+        </tr>
+      `;
     }
 
     function exportMatriksToExcel() {
-      const { columns, metrics } = calculateMatriksData();
-      const namaDesa = activeDesa === 'ALL' ? 'Semua_Puskesmas' : activeDesa;
+      const { rowsData, totalSummary } = calculateMatriksData();
+      const isGlobal = (activeDesa === 'ALL');
+      const namaDesa = isGlobal ? 'Semua_Puskesmas' : activeDesa;
 
-      const exportRows = Object.keys(metrics).map(k => {
-        const item = metrics[k];
-        const rowObj = { "Indikator / Kategori Sasaran": item.label };
-        columns.forEach(c => {
-          rowObj[c.label] = item.cols[c.key];
-        });
-        rowObj["TOTAL"] = item.total;
-        return rowObj;
+      const excelRows = rowsData.map(r => ({
+        "NO": r.no,
+        "DESA / RT": r.label,
+        "PNDDK (L)": r.pnddk_l,
+        "PNDDK (P)": r.pnddk_p,
+        "TOTAL PNDDK": r.pnddk_total,
+        "JMLH KK": r.jml_kk,
+        "PUS": r.pus,
+        "PUS 4T": r.pus_4t,
+        "WUS": r.wus,
+        "KB": r.kb,
+        "IBU HAMIL": r.bumil,
+        "BAYI": r.bayi,
+        "BALITA": r.balita,
+        "PRASEKOLAH": r.prasekolah,
+        "PRA LANSIA": r.pra_lansia,
+        "LANSIA 60-70": r.lansia_6070,
+        "LANSIA >70": r.lansia_70,
+        "REMAJA (L)": r.remaja_l,
+        "REMAJA (P)": r.remaja_p,
+        "TOTAL REMAJA": r.remaja_total
+      }));
+
+      // Tambah baris JUMLAH TOTAL
+      excelRows.push({
+        "NO": "",
+        "DESA / RT": "JUMLAH TOTAL",
+        "PNDDK (L)": totalSummary.pnddk_l,
+        "PNDDK (P)": totalSummary.pnddk_p,
+        "TOTAL PNDDK": totalSummary.pnddk_total,
+        "JMLH KK": totalSummary.jml_kk,
+        "PUS": totalSummary.pus,
+        "PUS 4T": totalSummary.pus_4t,
+        "WUS": totalSummary.wus,
+        "KB": totalSummary.kb,
+        "IBU HAMIL": totalSummary.bumil,
+        "BAYI": totalSummary.bayi,
+        "BALITA": totalSummary.balita,
+        "PRASEKOLAH": totalSummary.prasekolah,
+        "PRA LANSIA": totalSummary.pra_lansia,
+        "LANSIA 60-70": totalSummary.lansia_6070,
+        "LANSIA >70": totalSummary.lansia_70,
+        "REMAJA (L)": totalSummary.remaja_l,
+        "REMAJA (P)": totalSummary.remaja_p,
+        "TOTAL REMAJA": totalSummary.remaja_total
       });
 
-      const ws = XLSX.utils.json_to_sheet(exportRows);
+      const ws = XLSX.utils.json_to_sheet(excelRows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Matriks PWS Rekap");
-      XLSX.writeFile(wb, `Matriks_Rekap_${namaDesa}_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "REKAPAN TOTAL");
+      XLSX.writeFile(wb, `REKAP_SASARAN_${namaDesa}_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     // ==========================================
@@ -1839,7 +1934,7 @@
     }
 
     // ==========================================
-    // 9. EKSPOR LAPORAN MULTI-SHEET
+    // 9. EKSPOR LAPORAN MULTI-SHEET LENGKAP
     // ==========================================
     function exportToExcel() {
       const isLogin = !!currentUser;
@@ -1858,19 +1953,58 @@
 
       const wb = XLSX.utils.book_new();
 
-      const { columns, metrics } = calculateMatriksData();
-      const rekapRows = Object.keys(metrics).map(k => {
-        const item = metrics[k];
-        const rowObj = { "Indikator / Kategori Sasaran": item.label };
-        columns.forEach(c => {
-          rowObj[c.label] = item.cols[c.key];
-        });
-        rowObj["TOTAL"] = item.total;
-        return rowObj;
-      });
-      const wsRekap = XLSX.utils.json_to_sheet(rekapRows);
-      XLSX.utils.book_append_sheet(wb, wsRekap, "REKAP DATA 2026");
+      // 1. Sheet Pertama: REKAPAN TOTAL Format Matriks
+      const { rowsData, totalSummary } = calculateMatriksData();
+      const excelRows = rowsData.map(r => ({
+        "NO": r.no,
+        "DESA / RT": r.label,
+        "PNDDK (L)": r.pnddk_l,
+        "PNDDK (P)": r.pnddk_p,
+        "TOTAL PNDDK": r.pnddk_total,
+        "JMLH KK": r.jml_kk,
+        "PUS": r.pus,
+        "PUS 4T": r.pus_4t,
+        "WUS": r.wus,
+        "KB": r.kb,
+        "IBU HAMIL": r.bumil,
+        "BAYI": r.bayi,
+        "BALITA": r.balita,
+        "PRASEKOLAH": r.prasekolah,
+        "PRA LANSIA": r.pra_lansia,
+        "LANSIA 60-70": r.lansia_6070,
+        "LANSIA >70": r.lansia_70,
+        "REMAJA (L)": r.remaja_l,
+        "REMAJA (P)": r.remaja_p,
+        "TOTAL REMAJA": r.remaja_total
+      }));
 
+      excelRows.push({
+        "NO": "",
+        "DESA / RT": "JUMLAH TOTAL",
+        "PNDDK (L)": totalSummary.pnddk_l,
+        "PNDDK (P)": totalSummary.pnddk_p,
+        "TOTAL PNDDK": totalSummary.pnddk_total,
+        "JMLH KK": totalSummary.jml_kk,
+        "PUS": totalSummary.pus,
+        "PUS 4T": totalSummary.pus_4t,
+        "WUS": totalSummary.wus,
+        "KB": totalSummary.kb,
+        "IBU HAMIL": totalSummary.bumil,
+        "BAYI": totalSummary.bayi,
+        "BALITA": totalSummary.balita,
+        "PRASEKOLAH": totalSummary.prasekolah,
+        "PRA LANSIA": totalSummary.pra_lansia,
+        "LANSIA 60-70": totalSummary.lansia_6070,
+        "LANSIA >70": totalSummary.lansia_70,
+        "REMAJA (L)": totalSummary.remaja_l,
+        "REMAJA (P)": totalSummary.remaja_p,
+        "TOTAL REMAJA": totalSummary.remaja_total
+      });
+
+      const wsRekap = XLSX.utils.json_to_sheet(excelRows);
+      XLSX.utils.book_append_sheet(wb, wsRekap, "REKAPAN TOTAL");
+
+      // 2. Sheet per Sub-Wilayah (RT 1 s/d RT 9)
       if (!isGlobal) {
         const uniqueRTs = [...new Set(dataset.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
         uniqueRTs.sort((a, b) => {
