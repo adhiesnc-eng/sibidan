@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SiBidan Terpadu - UPTD Puskesmas Sampanahan</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-down {
+      animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <div id="updateBanner" class="hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600 text-white shadow-lg sticky top-0 z-50 animate-slide-down border-b border-white/20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+      <div class="flex items-center gap-2">
+        <span class="p-1 bg-white/20 rounded-lg"><i class="fa-solid fa-arrows-rotate animate-spin text-amber-300"></i></span>
+        <span class="font-medium">Pembaruan Tersedia: <strong id="newVersionText">v1.2.1</strong> &bull; <span id="newVersionDesc" class="opacity-90">Peningkatan sistem dan perbaikan fitur</span></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="applyAppUpdate()" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-3 py-1 rounded-md shadow-sm transition flex items-center gap-1.5 text-xs">
+          <i class="fa-solid fa-cloud-arrow-down"></i> Perbarui Sekarang
+        </button>
+        <button onclick="dismissUpdateBanner()" class="text-white/80 hover:text-white p-1" title="Tutup">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <header class="bg-teal-700 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-3">
+      
+      <div class="flex items-center space-x-3">
+        <div class="bg-white/10 p-2 rounded-xl backdrop-blur-sm">
+          <i class="fa-solid fa-hospital text-2xl text-rose-300"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight leading-tight">SiBidan Terpadu</h1>
+            <span id="appVersionBadge" class="bg-teal-900/80 text-teal-200 border border-teal-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">v1.2.0</span>
+          </div>
+          <p class="text-xs text-teal-100">UPTD Puskesmas Sampanahan & Poskesdes</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <div id="adminActions" class="hidden flex items-center gap-2">
+          <button onclick="openModalDesa()" class="bg-teal-800 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm border border-teal-500">
+            <i class="fa-solid fa-gears"></i> <span class="hidden md:inline">Kelola Desa & Sistem</span>
+          </button>
+          <button onclick="openModalTambah()" class="bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-user-plus"></i> <span class="hidden md:inline">Tambah Sasaran</span>
+          </button>
+          <button onclick="triggerExcelUpload()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-file-excel"></i> <span class="hidden md:inline">Import Excel</span>
+          </button>
+          <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
+        </div>
+
+        <div id="authContainer">
+          <button id="btnLoginModal" onclick="openLoginModal()" class="bg-white text-teal-800 hover:bg-teal-50 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-right-to-bracket"></i> Login Bidan / Admin
+          </button>
+          
+          <div id="userProfile" class="hidden flex items-center gap-2">
+            <div class="hidden lg:block text-right">
+              <div id="userEmailText" class="text-xs font-semibold text-white">bidan@puskesmas.id</div>
+              <div class="text-[10px] text-teal-200">Akses Bidan Terverifikasi</div>
+            </div>
+            <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm" title="Keluar">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-location-dot text-teal-600"></i> Wilayah Desa:
+        </label>
+        <select id="pilihDesa" onchange="onDesaChange()" class="w-full sm:w-72 py-2 px-3 border-2 border-teal-600/50 bg-teal-50/50 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <option value="ALL">🌐 Semua Wilayah Puskesmas (Gabungan)</option>
+        </select>
+      </div>
+
+      <div class="flex items-center justify-between md:justify-end gap-3 border-t md:border-t-0 pt-2 md:pt-0">
+        <div class="flex items-center gap-2">
+          <span id="roleIndicatorDot" class="inline-flex h-3 w-3 rounded-full bg-amber-400"></span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500" id="roleText">Mode Tamu (Privasi Terkunci)</span>
+        </div>
+        <div id="dbStatus" class="text-xs text-slate-500 font-medium">
+          <i class="fa-solid fa-circle-notch fa-spin text-teal-600"></i> Menghubungkan...
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="text-slate-500 text-xs font-medium flex items-center justify-between">
+          <span>Total Penduduk</span>
+          <i class="fa-solid fa-users text-slate-400"></i>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-slate-800" id="statTotal">-</div>
+      </div>
+
+      <div class="bg-pink-50/70 p-4 rounded-xl border border-pink-200 shadow-sm flex flex-col justify-between">
+        <div class="text-pink-700 text-xs font-medium flex items-center justify-between">
+          <span>Ibu Hamil</span>
+          <i class="fa-solid fa-person-pregnant text-pink-500"></i>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-pink-700" id="statBumil">-</div>
+      </div>
+
+      <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 shadow-sm flex flex-col justify-between">
+        <div class="text-amber-800 text-xs font-medium flex items-center justify-between">
+          <span>Bayi & Balita</span>
+          <i class="fa-solid fa-baby text-amber-500"></i>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-amber-800" id="statBalita">-</div>
+      </div>
+
+      <div class="bg-teal-50/70 p-4 rounded-xl border border-teal-200 shadow-sm flex flex-col justify-between">
+        <div class="text-teal-800 text-xs font-medium flex items-center justify-between">
+          <span>Akseptor KB</span>
+          <i class="fa-solid fa-hand-holding-heart text-teal-600"></i>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-teal-800" id="statKB">-</div>
+      </div>
+
+      <div class="bg-rose-50/70 p-4 rounded-xl border border-rose-200 shadow-sm flex flex-col justify-between">
+        <div class="text-rose-800 text-xs font-medium flex items-center justify-between">
+          <span>Risiko 4T / ALKI</span>
+          <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-rose-800" id="statRisti">-</div>
+      </div>
+
+      <div class="bg-purple-50/70 p-4 rounded-xl border border-purple-200 shadow-sm flex flex-col justify-between">
+        <div class="text-purple-800 text-xs font-medium flex items-center justify-between">
+          <span>Lansia (>60 th)</span>
+          <i class="fa-solid fa-person-walking-with-cane text-purple-600"></i>
+        </div>
+        <div class="mt-2 text-2xl font-bold text-purple-800" id="statLansia">-</div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
+      <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+        <button onclick="setTab('semua')" id="tab-semua" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white transition">
+          Semua Data
+        </button>
+        <button onclick="setTab('bumil')" id="tab-bumil" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          <i class="fa-solid fa-person-pregnant mr-1"></i> Ibu Hamil
+        </button>
+        <button onclick="setTab('balita')" id="tab-balita" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          <i class="fa-solid fa-baby mr-1"></i> Bayi & Balita
+        </button>
+        <button onclick="setTab('pus_kb')" id="tab-pus_kb" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          <i class="fa-solid fa-venus-mars mr-1"></i> PUS & KB
+        </button>
+        <button onclick="setTab('remaja')" id="tab-remaja" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          <i class="fa-solid fa-child-reaching mr-1"></i> Remaja
+        </button>
+        <button onclick="setTab('posbindu')" id="tab-posbindu" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          <i class="fa-solid fa-stethoscope mr-1"></i> Posbindu (15-59)
+        </button>
+        <button onclick="setTab('lansia')" id="tab-lansia" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          <i class="fa-solid fa-person-cane mr-1"></i> Lansia
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+        <div class="sm:col-span-6 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Cari Nama, NIK, No. KK, atau Pekerjaan..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <div class="sm:col-span-3">
+          <select id="filterRT" onchange="applyFilters()" class="w-full py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white">
+            <option value="">Semua Wilayah RT</option>
+            <option value="1">RT 01</option>
+            <option value="2">RT 02</option>
+            <option value="3">RT 03</option>
+            <option value="4">RT 04</option>
+            <option value="5">RT 05</option>
+            <option value="6">RT 06</option>
+            <option value="7">RT 07</option>
+            <option value="8">RT 08</option>
+            <option value="9">RT 09</option>
+            <option value="10">RT 10</option>
+            <option value="11">RT 11</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-3">
+          <button onclick="exportToExcel()" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-sm border border-slate-300 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-download text-teal-700"></i> Ekspor Laporan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-100 text-slate-700 text-xs uppercase font-bold tracking-wider border-b border-slate-200">
+            <tr>
+              <th class="py-3 px-3 text-center w-12">No</th>
+              <th class="py-3 px-3">Desa / RT / KK</th>
+              <th class="py-3 px-3">Nama Sasaran & NIK</th>
+              <th class="py-3 px-3 text-center">JK / Usia</th>
+              <th class="py-3 px-3">Hub / Pekerjaan</th>
+              <th class="py-3 px-3">Status KIA & KB</th>
+              <th id="thAksi" class="py-3 px-3 text-center hidden">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody" class="divide-y divide-slate-200 text-xs sm:text-sm">
+            <tr>
+              <td colspan="7" class="py-8 text-center text-slate-400">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-teal-600 mb-2"></i>
+                <p>Memuat data dari Firebase...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-2">
+        <span id="recordCount">Menampilkan 0 data</span>
+        <div class="flex items-center gap-3">
+          <span id="footerDesaLabel">Wilayah: Desa Sampanahan</span>
+          <span class="text-slate-300">&bull;</span>
+          <span id="footerVersionText" class="font-mono text-slate-400">SiBidan v1.2.0</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="modalLogin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+      <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-xl text-teal-200"></i>
+          <h3 class="font-bold text-base">Login Bidan / Admin</h3>
+        </div>
+        <button onclick="closeLoginModal()" class="text-teal-200 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email Terdaftar</label>
+          <input type="email" id="loginEmail" required placeholder="bidan@puskesmas.id" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+        </div>
+
+        <div id="loginErrorMsg" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg font-medium"></div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeLoginModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Batal</button>
+          <button type="submit" id="btnLoginSubmit" class="px-5 py-2 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+            Masuk
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalKelolaDesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-gears text-xl text-teal-200"></i>
+          <h3 class="font-bold text-base">Kelola Desa & Sistem Versi</h3>
+        </div>
+        <button onclick="closeModalDesa()" class="text-teal-200 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6 overflow-y-auto flex-1">
+        <div class="p-4 bg-teal-50/70 border border-teal-200 rounded-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-code-branch text-teal-600"></i> Kontrol Versi Aplikasi (Auto-Update)
+            </h4>
+            <span class="text-[11px] font-mono bg-white px-2 py-0.5 rounded border border-teal-300 text-teal-800">Lokal: <strong id="modalLocalVer">v1.2.0</strong></span>
+          </div>
+          <p class="text-xs text-slate-600">Saat Anda menaikkan nomor versi di bawah ini, seluruh bidan dan pengguna yang membuka aplikasi akan langsung menerima notifikasi pembaruan otomatis.</p>
+          
+          <form onsubmit="updateServerVersion(event)" class="space-y-2 pt-1">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-0.5">Versi Rilis</label>
+                <input type="text" id="inputVersionCode" required placeholder="v1.2.1" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono">
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-0.5">Catatan Perubahan (Changelog)</label>
+                <input type="text" id="inputVersionChangelog" placeholder="Penambahan rekap PWS & perbaikan import" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+              </div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button type="submit" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                <i class="fa-solid fa-bullhorn"></i> Publikasikan Versi Baru
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-map-location-dot text-teal-600"></i> Daftar Desa Binaan Puskesmas
+          </h4>
+          
+          <form onsubmit="tambahDesaBaru(event)" class="flex gap-2">
+            <input type="text" id="inputNamaDesaBaru" required placeholder="Nama Desa Baru (contoh: Desa Sukamaju)" class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+            <button type="submit" class="bg-teal-700 hover:bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1">
+              <i class="fa-solid fa-plus"></i> Tambah
+            </button>
+          </form>
+
+          <div class="border border-slate-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-100 text-slate-700 text-xs uppercase font-bold">
+                <tr>
+                  <th class="p-2.5">Nama Desa</th>
+                  <th class="p-2.5 text-center w-20">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="listMasterDesaBody" class="divide-y divide-slate-200">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button onclick="closeModalDesa()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalForm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="p-5 bg-teal-700 text-white flex justify-between items-center rounded-t-2xl">
+        <h3 id="modalTitle" class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-user-pen"></i> Form Data Sasaran KIA / KB
+        </h3>
+        <button onclick="closeModal()" class="text-teal-200 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <form id="pendudukForm" onsubmit="saveData(event)" class="p-6 space-y-4">
+        <input type="hidden" id="formDocId">
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Wilayah Desa</label>
+            <select id="formDesa" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white font-medium">
+              </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RT / Dusun</label>
+            <select id="formRT" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white">
+              <option value="1">RT 01</option>
+              <option value="2">RT 02</option>
+              <option value="3">RT 03</option>
+              <option value="4">RT 04</option>
+              <option value="5">RT 05</option>
+              <option value="6">RT 06</option>
+              <option value="7">RT 07</option>
+              <option value="8">RT 08</option>
+              <option value="9">RT 09</option>
+              <option value="10">RT 10</option>
+              <option value="11">RT 11</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nomor KK</label>
+            <input type="text" id="formNoKK" placeholder="16 Digit No. KK" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">NIK</label>
+            <input type="text" id="formNIK" placeholder="16 Digit NIK" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Lengkap</label>
+            <input type="text" id="formNama" required placeholder="Nama Sasaran" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Jenis Kelamin</label>
+            <select id="formJK" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white">
+              <option value="L">Laki-laki (L)</option>
+              <option value="P">Perempuan (P)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Hub. Keluarga</label>
+            <input type="text" id="formHubungan" placeholder="KK, ISTERI, ANAK, dll" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Usia / Bln</label>
+            <input type="text" id="formUsia" placeholder="Contoh: 28 atau 18 BULAN" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tempat & Tanggal Lahir</label>
+            <input type="text" id="formTTL" placeholder="Kotabaru, 12/04/1995" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Pekerjaan</label>
+            <input type="text" id="formPekerjaan" placeholder="IRT, PETANI, PNS, dll" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+          <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider">Status Sasaran KIA & BKKBN</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formPUS" class="rounded text-teal-600 focus:ring-teal-500"> PUS
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formWUS" class="rounded text-teal-600 focus:ring-teal-500"> WUS
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formBumil" class="rounded text-pink-600 focus:ring-pink-500"> Ibu Hamil
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formBalita" class="rounded text-amber-600 focus:ring-amber-500"> Bayi/Balita
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formRemaja" class="rounded text-indigo-600 focus:ring-indigo-500"> Remaja
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formLansia" class="rounded text-purple-600 focus:ring-purple-500"> Lansia (>60 th)
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="form4T" class="rounded text-rose-600 focus:ring-rose-500"> Risiko 4T
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="formALKI" class="rounded text-rose-600 focus:ring-rose-500"> ALKI
+            </label>
+          </div>
+
+          <div class="pt-2">
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Metode KB (Bila Akseptor)</label>
+            <input type="text" id="formKB" placeholder="PIL, SUNTIK, IMPLAN, IUD, MOW, MOP, dll" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold shadow-sm">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 0. VERSI APLIKASI LOKAL & AUTO-UPDATE
+    // ==========================================
+    const APP_VERSION = "v1.2.0";
+
+    document.getElementById('appVersionBadge').innerText = APP_VERSION;
+    document.getElementById('footerVersionText').innerText = `SiBidan ${APP_VERSION}`;
+    document.getElementById('modalLocalVer').innerText = APP_VERSION;
+
+    // ==========================================
+    // 1. KONFIGURASI FIREBASE PROJECT ANDA
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBmMLQzX6yQFGeqF46AZuPIUiNS5TuqAI",
+      authDomain: "bidandesapkmsampananahan.firebaseapp.com",
+      projectId: "bidandesapkmsampananahan",
+      storageBucket: "bidandesapkmsampananahan.firebasestorage.app",
+      messagingSenderId: "953309707729",
+      appId: "1:953309707729:web:158d2e388c7a8cd59bb4f0",
+      measurementId: "G-08H9EG64LY"
+    };
+
+    let auth, db;
+    let currentUser = null;
+    let allData = [];
+    let masterDesaList = [];
+    let currentTab = 'semua';
+    let activeDesa = 'ALL';
+
+    const defaultDesaData = [
+      { id: 'SAMPANAHAN', nama: 'Desa Sampanahan' },
+      { id: 'SAMPANAHAN_HILIR', nama: 'Desa Sampanahan Hilir' },
+      { id: 'PAPAAN', nama: 'Desa Papaan' },
+      { id: 'GUNUNG_BATU_BESAR', nama: 'Desa Gunung Batu Besar' },
+      { id: 'SUKAMAJU', nama: 'Desa Sukamaju' },
+      { id: 'BASAWANG', nama: 'Desa Basawang' },
+      { id: 'BANJARSARI', nama: 'Desa Banjarsari' },
+      { id: 'SEPAPAH', nama: 'Desa Sepapah' },
+      { id: 'RAMPA_MANUNGGUL', nama: 'Desa Rampa Manunggul' }
+    ];
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      document.getElementById('dbStatus').innerHTML = '<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-cloud"></i> Firebase Terhubung</span>';
+    } catch (e) {
+      console.error("Firebase init error:", e);
+      document.getElementById('dbStatus').innerHTML = '<span class="text-amber-600 font-semibold"><i class="fa-solid fa-circle-exclamation"></i> Menjalankan Mode Demo</span>';
+    }
+
+    // Auto-update listener
+    function initAppVersionListener() {
+      if (!db) return;
+
+      db.collection("system_config").doc("app_info").onSnapshot((doc) => {
+        if (!doc.exists) {
+          db.collection("system_config").doc("app_info").set({
+            latestVersion: APP_VERSION,
+            changelog: "Rilis stabil Sistem Informasi Bidan Desa Terpadu",
+            updatedAt: new Date().toISOString()
+          });
+          return;
+        }
+
+        const data = doc.data();
+        const serverVersion = data.latestVersion;
+        const changelog = data.changelog || "Pembaruan sistem dan perbaikan fitur";
+
+        document.getElementById('inputVersionCode').value = serverVersion || APP_VERSION;
+        document.getElementById('inputVersionChangelog').value = changelog;
+
+        if (serverVersion && serverVersion.trim() !== APP_VERSION.trim()) {
+          document.getElementById('newVersionText').innerText = serverVersion;
+          document.getElementById('newVersionDesc').innerText = changelog;
+          document.getElementById('updateBanner').classList.remove('hidden');
+        } else {
+          document.getElementById('updateBanner').classList.add('hidden');
+        }
+      });
+    }
+
+    function applyAppUpdate() {
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => caches.delete(name));
+        });
+      }
+      window.location.reload(true);
+    }
+
+    function dismissUpdateBanner() {
+      document.getElementById('updateBanner').classList.add('hidden');
+    }
+
+    async function updateServerVersion(e) {
+      e.preventDefault();
+      if (!currentUser) return alert("Hanya admin yang berhak mempublikasikan versi.");
+
+      const newVer = document.getElementById('inputVersionCode').value.trim();
+      const changelog = document.getElementById('inputVersionChangelog').value.trim();
+
+      if (!newVer) return;
+
+      if (!db) {
+        alert(`Mode Demo: Versi diubah menjadi ${newVer}`);
+        return;
+      }
+
+      try {
+        await db.collection("system_config").doc("app_info").set({
+          latestVersion: newVer,
+          changelog: changelog,
+          updatedBy: currentUser.email,
+          updatedAt: new Date().toISOString()
+        });
+        alert(`Berhasil mempublikasikan ${newVer}. Seluruh pengguna akan menerima notifikasi update!`);
+      } catch (err) {
+        alert("Gagal mempublikasikan versi: " + err.message);
+      }
+    }
+
+    // Master Desa Listener
+    function initMasterDesaListener() {
+      if (!db) {
+        masterDesaList = [...defaultDesaData];
+        renderDesaDropdown();
+        return;
+      }
+
+      db.collection("master_desa").onSnapshot(async (snapshot) => {
+        if (snapshot.empty) {
+          const batch = db.batch();
+          defaultDesaData.forEach(d => {
+            const ref = db.collection("master_desa").doc(d.id);
+            batch.set(ref, { nama: d.nama, createdAt: new Date() });
+          });
+          await batch.commit();
+          return;
+        }
+
+        masterDesaList = [];
+        snapshot.forEach(doc => {
+          masterDesaList.push({ id: doc.id, nama: doc.data().nama || doc.id });
+        });
+        renderDesaDropdown();
+        renderMasterDesaTable();
+      });
+    }
+
+    function renderDesaDropdown() {
+      const selectPilih = document.getElementById('pilihDesa');
+      const selectForm = document.getElementById('formDesa');
+      const currentSelected = selectPilih.value || 'ALL';
+
+      let optionsHTML = '<option value="ALL">🌐 Semua Wilayah Puskesmas (Gabungan)</option>';
+      let formOptionsHTML = '';
+
+      masterDesaList.forEach(d => {
+        optionsHTML += `<option value="${d.id}">${d.nama}</option>`;
+        formOptionsHTML += `<option value="${d.id}">${d.nama}</option>`;
+      });
+
+      selectPilih.innerHTML = optionsHTML;
+      selectForm.innerHTML = formOptionsHTML;
+      selectPilih.value = currentSelected;
+      activeDesa = selectPilih.value;
+    }
+
+    // Auth Listener
+    if (auth) {
+      auth.onAuthStateChanged((user) => {
+        currentUser = user;
+        const roleText = document.getElementById('roleText');
+        const roleDot = document.getElementById('roleIndicatorDot');
+        const adminActions = document.getElementById('adminActions');
+        const btnLoginModal = document.getElementById('btnLoginModal');
+        const userProfile = document.getElementById('userProfile');
+        const userEmailText = document.getElementById('userEmailText');
+        const thAksi = document.getElementById('thAksi');
+
+        if (user) {
+          roleText.innerText = "Mode Petugas (Akses Penuh Terbuka)";
+          roleDot.className = "inline-flex h-3 w-3 rounded-full bg-emerald-500 animate-pulse";
+          adminActions.classList.remove('hidden');
+          btnLoginModal.classList.add('hidden');
+          userProfile.classList.remove('hidden');
+          userEmailText.innerText = user.email;
+          thAksi.classList.remove('hidden');
+        } else {
+          roleText.innerText = "Mode Tamu (Privasi Terkunci)";
+          roleDot.className = "inline-flex h-3 w-3 rounded-full bg-amber-400";
+          adminActions.classList.add('hidden');
+          btnLoginModal.classList.remove('hidden');
+          userProfile.classList.add('hidden');
+          thAksi.classList.add('hidden');
+        }
+        applyFilters();
+      });
+    }
+
+    // Listener Penduduk Realtime
+    if (db) {
+      db.collection("penduduk_puskesmas").onSnapshot((snapshot) => {
+        allData = [];
+        snapshot.forEach((doc) => {
+          allData.push({ id: doc.id, ...doc.data() });
+        });
+        updateDashboard();
+        applyFilters();
+      });
+    }
+
+    initMasterDesaListener();
+    initAppVersionListener();
+
+    // ==========================================
+    // 2. MANAJEMEN DESA & AUTH
+    // ==========================================
+    function openModalDesa() {
+      if (!currentUser) return alert("Hanya admin yang dapat mengelola sistem.");
+      renderMasterDesaTable();
+      document.getElementById('modalKelolaDesa').classList.remove('hidden');
+    }
+
+    function closeModalDesa() {
+      document.getElementById('modalKelolaDesa').classList.add('hidden');
+    }
+
+    function renderMasterDesaTable() {
+      const tbody = document.getElementById('listMasterDesaBody');
+      tbody.innerHTML = masterDesaList.map(d => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-2.5 font-medium text-slate-800">${d.nama}</td>
+          <td class="p-2.5 text-center">
+            <button onclick="hapusDesa('${d.id}', '${d.nama}')" class="text-rose-500 hover:text-rose-700 p-1 transition" title="Hapus Desa">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function tambahDesaBaru(e) {
+      e.preventDefault();
+      if (!currentUser) return alert("Hanya admin yang berhak menambah desa.");
+      
+      const input = document.getElementById('inputNamaDesaBaru');
+      const namaBaru = input.value.trim();
+      if (!namaBaru) return;
+
+      const idBaru = namaBaru.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+
+      if (!db) {
+        masterDesaList.push({ id: idBaru, nama: namaBaru });
+        renderDesaDropdown();
+        renderMasterDesaTable();
+        input.value = '';
+        return;
+      }
+
+      try {
+        await db.collection("master_desa").doc(idBaru).set({
+          nama: namaBaru,
+          createdAt: new Date().toISOString()
+        });
+        input.value = '';
+      } catch (err) {
+        alert("Gagal menambah desa: " + err.message);
+      }
+    }
+
+    async function hapusDesa(desaId, namaDesa) {
+      if (!currentUser) return alert("Hanya admin yang berhak menghapus desa.");
+      if (!confirm(`Hapus ${namaDesa} dari daftar desa binaan?`)) return;
+
+      if (!db) {
+        masterDesaList = masterDesaList.filter(d => d.id !== desaId);
+        renderDesaDropdown();
+        renderMasterDesaTable();
+        return;
+      }
+
+      try {
+        await db.collection("master_desa").doc(desaId).delete();
+      } catch (err) {
+        alert("Gagal menghapus desa: " + err.message);
+      }
+    }
+
+    function onDesaChange() {
+      activeDesa = document.getElementById('pilihDesa').value;
+      const footerLabel = document.getElementById('footerDesaLabel');
+      const d = masterDesaList.find(x => x.id === activeDesa);
+      footerLabel.innerText = activeDesa === 'ALL' ? "Wilayah: Seluruh Wilayah Puskesmas" : `Wilayah: ${d ? d.nama : activeDesa}`;
+      updateDashboard();
+      applyFilters();
+    }
+
+    function openLoginModal() {
+      document.getElementById('loginErrorMsg').classList.add('hidden');
+      document.getElementById('modalLogin').classList.remove('hidden');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('modalLogin').classList.add('hidden');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('btnLoginSubmit');
+      const errorMsg = document.getElementById('loginErrorMsg');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Masuk...';
+      errorMsg.classList.add('hidden');
+
+      if (!auth) {
+        alert("Firebase Auth belum aktif.");
+        btn.disabled = false;
+        btn.innerText = 'Masuk';
+        return;
+      }
+
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+        closeLoginModal();
+      } catch (err) {
+        errorMsg.innerText = "Login gagal: " + err.message;
+        errorMsg.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Masuk';
+      }
+    }
+
+    async function handleLogout() {
+      if (confirm("Keluar dari akun petugas/bidan?")) {
+        if (auth) await auth.signOut();
+      }
+    }
+
+    function maskSensitive(val) {
+      if (!val) return '-';
+      const str = String(val);
+      if (str.length <= 8) return '******';
+      return str.substring(0, 6) + '******' + str.substring(str.length - 4);
+    }
+
+    function getDesaClean(d) {
+      return d.desa_id || (d.desa && d.desa.toUpperCase().includes('HILIR') ? 'SAMPANAHAN_HILIR' : 'SAMPANAHAN');
+    }
+
+    function getDesaNama(desaId) {
+      const found = masterDesaList.find(d => d.id === desaId);
+      return found ? found.nama : desaId;
+    }
+
+    // ==========================================
+    // 3. DASHBOARD & FILTERING
+    // ==========================================
+    function updateDashboard() {
+      const filteredByDesa = allData.filter(p => {
+        if (activeDesa === 'ALL') return true;
+        return getDesaClean(p) === activeDesa;
+      });
+
+      const total = filteredByDesa.length;
+      let bumil = 0, balita = 0, kb = 0, risti = 0, lansia = 0;
+
+      filteredByDesa.forEach(p => {
+        if (p.isBumil) bumil++;
+        if (p.isBalita || (p.usia_text && p.usia_text.toLowerCase().includes('bulan'))) balita++;
+        if (p.kb && p.kb.trim() !== '' && p.kb.trim() !== '-') kb++;
+        if (p.is4T || p.isALKI) risti++;
+        if (p.isLansia || parseInt(p.usia) >= 60) lansia++;
+      });
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statBumil').innerText = bumil;
+      document.getElementById('statBalita').innerText = balita;
+      document.getElementById('statKB').innerText = kb;
+      document.getElementById('statRisti').innerText = risti;
+      document.getElementById('statLansia').innerText = lansia;
+    }
+
+    function setTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-teal-700', 'text-white');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-100', 'text-slate-600');
+        activeBtn.classList.add('bg-teal-700', 'text-white');
+      }
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase();
+      const rtFilter = document.getElementById('filterRT').value;
+
+      const filtered = allData.filter(p => {
+        if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
+
+        const matchSearch = (
+          (p.nama && p.nama.toLowerCase().includes(keyword)) ||
+          (p.nik && p.nik.toLowerCase().includes(keyword)) ||
+          (p.no_kk && p.no_kk.toLowerCase().includes(keyword)) ||
+          (p.pekerjaan && p.pekerjaan.toLowerCase().includes(keyword))
+        );
+
+        const matchRT = rtFilter === "" || String(p.rt) === String(rtFilter);
+
+        let matchTab = true;
+        const usiaNum = parseInt(p.usia) || 0;
+        if (currentTab === 'bumil') matchTab = p.isBumil;
+        else if (currentTab === 'balita') matchTab = p.isBalita || (p.usia_text && p.usia_text.toLowerCase().includes('bulan'));
+        else if (currentTab === 'pus_kb') matchTab = p.isPUS || (p.kb && p.kb !== '-');
+        else if (currentTab === 'remaja') matchTab = p.isRemaja || (usiaNum >= 10 && usiaNum <= 18);
+        else if (currentTab === 'posbindu') matchTab = p.isPosbindu || (usiaNum >= 15 && usiaNum <= 59);
+        else if (currentTab === 'lansia') matchTab = p.isLansia || usiaNum >= 60;
+
+        return matchSearch && matchRT && matchTab;
+      });
+
+      renderTable(filtered);
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('dataTableBody');
+      const counter = document.getElementById('recordCount');
+      counter.innerText = `Menampilkan ${data.length} data`;
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Tidak ada data sasaran di wilayah ini.</td></tr>`;
+        return;
+      }
+
+      const isLogin = !!currentUser;
+
+      tbody.innerHTML = data.map((item, index) => {
+        let badges = [];
+        if (item.isBumil) badges.push('<span class="bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded text-[11px] font-bold">Bumil</span>');
+        if (item.isBalita || (item.usia_text && item.usia_text.toLowerCase().includes('bulan'))) badges.push('<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[11px] font-bold">Balita</span>');
+        if (item.kb && item.kb !== '-') badges.push(`<span class="bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded text-[11px] font-bold">KB: ${item.kb}</span>`);
+        
+        if (isLogin) {
+          if (item.is4T) badges.push('<span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[11px] font-bold">4T</span>');
+          if (item.isALKI) badges.push('<span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[11px] font-bold">ALKI</span>');
+        }
+
+        const displayedNoKK = isLogin ? (item.no_kk || '-') : maskSensitive(item.no_kk);
+        const displayedNIK = isLogin ? (item.nik || '-') : maskSensitive(item.nik);
+        const desaLabel = getDesaNama(getDesaClean(item));
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-3 text-center text-slate-400">${index + 1}</td>
+            <td class="py-3 px-3">
+              <div class="font-bold text-xs text-teal-800">${desaLabel}</div>
+              <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-800 mt-0.5 mb-1">RT ${item.rt || '-'}</span>
+              <div class="text-[11px] text-slate-400">KK: ${displayedNoKK}</div>
+            </td>
+            <td class="py-3 px-3 font-semibold text-slate-800">
+              ${item.nama}
+              <div class="text-[11px] text-slate-500 font-mono">NIK: ${displayedNIK}</div>
+              <div class="text-[11px] font-normal text-slate-400">${item.ttl || ''}</div>
+            </td>
+            <td class="py-3 px-3 text-center">
+              <span class="inline-block px-1.5 py-0.5 rounded text-xs font-bold ${item.jk === 'P' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">${item.jk || '-'}</span>
+              <div class="text-xs text-slate-600 mt-1">${item.usia_text || item.usia || '-'}</div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="font-medium text-slate-700">${item.hubungan || '-'}</div>
+              <div class="text-[11px] text-slate-400">${item.pekerjaan || '-'}</div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="flex flex-wrap gap-1">${badges.length > 0 ? badges.join('') : '<span class="text-slate-400 text-xs">-</span>'}</div>
+            </td>
+            ${isLogin ? `
+              <td class="py-3 px-3 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <button onclick="editData('${item.id}')" class="p-1.5 text-teal-600 hover:bg-teal-50 rounded transition" title="Edit Data">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button onclick="deleteData('${item.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition" title="Hapus Data">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            ` : ''}
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // 4. CRUD DATA SASARAN
+    // ==========================================
+    function openModalTambah() {
+      if (!currentUser) return alert("Hanya petugas yang berhak menambah sasaran.");
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus"></i> Tambah Sasaran Baru';
+      document.getElementById('pendudukForm').reset();
+      document.getElementById('formDocId').value = '';
+      document.getElementById('formDesa').value = (activeDesa !== 'ALL') ? activeDesa : (masterDesaList[0]?.id || 'SAMPANAHAN');
+      document.getElementById('modalForm').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modalForm').classList.add('hidden');
+    }
+
+    function editData(id) {
+      if (!currentUser) return alert("Hanya petugas yang berhak mengedit sasaran.");
+      const item = allData.find(d => d.id === id);
+      if (!item) return;
+
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen"></i> Edit Sasaran';
+      document.getElementById('formDocId').value = item.id;
+      document.getElementById('formDesa').value = getDesaClean(item);
+      document.getElementById('formRT').value = item.rt || '1';
+      document.getElementById('formNoKK').value = item.no_kk || '';
+      document.getElementById('formNIK').value = item.nik || '';
+      document.getElementById('formNama').value = item.nama || '';
+      document.getElementById('formJK').value = item.jk || 'L';
+      document.getElementById('formHubungan').value = item.hubungan || '';
+      document.getElementById('formUsia').value = item.usia_text || item.usia || '';
+      document.getElementById('formTTL').value = item.ttl || '';
+      document.getElementById('formPekerjaan').value = item.pekerjaan || '';
+      document.getElementById('formKB').value = item.kb || '';
+
+      document.getElementById('formPUS').checked = !!item.isPUS;
+      document.getElementById('formWUS').checked = !!item.isWUS;
+      document.getElementById('formBumil').checked = !!item.isBumil;
+      document.getElementById('formBalita').checked = !!item.isBalita;
+      document.getElementById('formRemaja').checked = !!item.isRemaja;
+      document.getElementById('formLansia').checked = !!item.isLansia;
+      document.getElementById('form4T').checked = !!item.is4T;
+      document.getElementById('formALKI').checked = !!item.isALKI;
+
+      document.getElementById('modalForm').classList.remove('hidden');
+    }
+
+    async function saveData(e) {
+      e.preventDefault();
+      if (!currentUser) return alert("Sesi login berakhir.");
+
+      const docId = document.getElementById('formDocId').value;
+      const desaVal = document.getElementById('formDesa').value;
+      const usiaVal = document.getElementById('formUsia').value;
+      const nikClean = document.getElementById('formNIK').value.replace(/['",\s]/g, '').trim();
+      const namaClean = document.getElementById('formNama').value.trim();
+      const rtClean = document.getElementById('formRT').value;
+      const ttlClean = document.getElementById('formTTL').value.trim();
+
+      const payload = {
+        desa_id: desaVal,
+        desa_nama: getDesaNama(desaVal),
+        rt: rtClean,
+        no_kk: document.getElementById('formNoKK').value.replace(/['",\s]/g, '').trim(),
+        nik: nikClean,
+        nama: namaClean,
+        jk: document.getElementById('formJK').value,
+        hubungan: document.getElementById('formHubungan').value.trim(),
+        usia: parseInt(usiaVal) || 0,
+        usia_text: usiaVal,
+        ttl: ttlClean,
+        pekerjaan: document.getElementById('formPekerjaan').value.trim(),
+        kb: document.getElementById('formKB').value.trim(),
+        isPUS: document.getElementById('formPUS').checked,
+        isWUS: document.getElementById('formWUS').checked,
+        isBumil: document.getElementById('formBumil').checked,
+        isBalita: document.getElementById('formBalita').checked,
+        isRemaja: document.getElementById('formRemaja').checked,
+        isLansia: document.getElementById('formLansia').checked,
+        is4T: document.getElementById('form4T').checked,
+        isALKI: document.getElementById('formALKI').checked,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!db) {
+        if (docId) {
+          const idx = allData.findIndex(d => d.id === docId);
+          allData[idx] = { id: docId, ...payload };
+        } else {
+          allData.unshift({ id: 'demo_' + Date.now(), ...payload });
+        }
+        closeModal();
+        updateDashboard();
+        applyFilters();
+        return;
+      }
+
+      try {
+        let targetId = docId;
+        if (!targetId) {
+          if (nikClean && nikClean.length >= 10 && !nikClean.startsWith('9999')) {
+            targetId = `${desaVal}_NIK_${nikClean}`;
+          } else {
+            const slugNama = namaClean.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            const slugTgl = ttlClean.replace(/[^a-zA-Z0-9]/g, '_');
+            targetId = `${desaVal}_RT${rtClean}_${slugNama}_${slugTgl}`;
+          }
+        }
+
+        await db.collection("penduduk_puskesmas").doc(targetId).set(payload, { merge: true });
+        closeModal();
+      } catch (err) {
+        alert("Gagal menyimpan data: " + err.message);
+      }
+    }
+
+    async function deleteData(id) {
+      if (!currentUser) return alert("Hanya petugas yang berhak menghapus data.");
+      if (!confirm("Hapus data sasaran ini?")) return;
+      if (!db) {
+        allData = allData.filter(d => d.id !== id);
+        updateDashboard();
+        applyFilters();
+        return;
+      }
+      try {
+        await db.collection("penduduk_puskesmas").doc(id).delete();
+      } catch (err) {
+        alert("Gagal menghapus: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // 5. IMPORT & EKSPOR EXCEL (ANTI-DUPLIKAT)
+    // ==========================================
+    function triggerExcelUpload() {
+      if (activeDesa === 'ALL') {
+        alert("Silakan pilih salah satu Desa tujuan di menu atas terlebih dahulu sebelum mengunggah file Excel.");
+        return;
+      }
+      document.getElementById('excelFileInput').click();
+    }
+
+    async function handleExcelUpload(event) {
+      if (!currentUser) {
+        alert("Hanya petugas yang berhak mengimpor data.");
+        event.target.value = '';
+        return;
+      }
+
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const namaDesaTarget = getDesaNama(activeDesa);
+      const statusEl = document.getElementById('dbStatus');
+      statusEl.innerHTML = `<span class="text-teal-700 font-semibold"><i class="fa-solid fa-spinner fa-spin"></i> Membaca data ${namaDesaTarget}...</span>`;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          let batchData = [];
+          let uniqueKeys = new Set();
+
+          workbook.SheetNames.forEach(sheetName => {
+            const cleanSheetName = sheetName.toUpperCase().replace(/\s+/g, '');
+            if (!cleanSheetName.includes('RT') || cleanSheetName.includes('DATA')) return;
+
+            const rtFromSheet = cleanSheetName.replace(/\D/g, '') || '1';
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+            let currentRT = rtFromSheet;
+            let currentNoKK = '';
+
+            for (let r = 0; r < json.length; r++) {
+              const row = json[r];
+              if (!row || row.length === 0) continue;
+
+              const namaRaw = row[6] !== undefined ? String(row[6]).trim() : '';
+
+              if (!namaRaw || 
+                  namaRaw.toLowerCase().includes('nama anggota') || 
+                  namaRaw.toLowerCase().includes('nama') ||
+                  namaRaw === '0' ||
+                  namaRaw === '-' ||
+                  namaRaw.toLowerCase().includes('kabupaten') ||
+                  namaRaw.toLowerCase().includes('desa')) {
+                continue;
+              }
+
+              const rowNoKK = row[3] ? String(row[3]).replace(/['",\s]/g, '').trim() : '';
+              if (rowNoKK && rowNoKK !== '-' && rowNoKK.length > 5) currentNoKK = rowNoKK;
+
+              const rowRT = row[1] ? String(row[1]).replace(/\D/g, '').trim() : '';
+              if (rowRT) currentRT = rowRT;
+
+              const nik = row[4] ? String(row[4]).replace(/['",\s]/g, '').trim() : '';
+              const jk = row[7] ? String(row[7]).trim().toUpperCase() : '';
+              const hubungan = row[8] ? String(row[8]).trim() : '';
+              const tempatLahir = row[9] ? String(row[9]).trim() : '';
+              const tglLahir = row[10] ? String(row[10]).trim() : '';
+              const usiaRaw = row[11] ? String(row[11]).trim() : '';
+              const pekerjaan = row[15] ? String(row[15]).trim() : '';
+
+              const pusVal = row[16] ? String(row[16]).trim() : '';
+              const wusVal = row[17] ? String(row[17]).trim() : '';
+              const kbVal = row[18] ? String(row[18]).trim() : '';
+              const bumilVal = row[19] ? String(row[19]).trim() : '';
+              const bayiVal = row[20] ? String(row[20]).trim() : '';
+              const balitaVal = row[21] ? String(row[21]).trim() : '';
+              const lansia6070 = row[23] ? String(row[23]).trim() : '';
+              const lansia70 = row[24] ? String(row[24]).trim() : '';
+              const remajaVal = (row[25] ? String(row[25]).trim() : '') || (row[26] ? String(row[26]).trim() : '');
+              const risti4T = row[27] ? String(row[27]).trim() : '';
+              const ristiALKI = row[28] ? String(row[28]).trim() : '';
+              const posbinduVal = row[29] ? String(row[29]).trim() : '';
+
+              const isPUS = pusVal !== '' && pusVal !== '-' && pusVal !== '0';
+              const isWUS = wusVal !== '' && wusVal !== '-' && wusVal !== '0';
+              const isBumil = bumilVal !== '' && bumilVal !== '-' && bumilVal !== '0';
+              const isBayi = bayiVal !== '' && bayiVal !== '-' && bayiVal !== '0';
+              const isBalita = (balitaVal !== '' && balitaVal !== '-' && balitaVal !== '0') || isBayi;
+              const isLansia = (lansia6070 !== '' && lansia6070 !== '-') || (lansia70 !== '' && lansia70 !== '-');
+              const isRemaja = remajaVal !== '' && remajaVal !== '-';
+              const is4T = risti4T !== '' && risti4T !== '-' && risti4T !== '0';
+              const isALKI = ristiALKI !== '' && ristiALKI !== '-' && ristiALKI !== '0';
+              const isPosbindu = posbinduVal !== '' && posbinduVal !== '-' && posbinduVal !== '0';
+              let cleanKB = (kbVal && kbVal !== '-' && kbVal !== '0') ? kbVal : '';
+
+              let docId = '';
+              if (nik && nik.length >= 10 && !nik.startsWith('9999')) {
+                docId = `${activeDesa}_NIK_${nik}`;
+              } else {
+                const slugNama = namaRaw.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                const slugTgl = tglLahir.replace(/[^a-zA-Z0-9]/g, '_');
+                docId = `${activeDesa}_RT${currentRT}_${slugNama}_${slugTgl}`;
+              }
+
+              if (uniqueKeys.has(docId)) continue;
+              uniqueKeys.add(docId);
+
+              batchData.push({
+                docId: docId,
+                desa_id: activeDesa,
+                desa_nama: namaDesaTarget,
+                rt: currentRT || rtFromSheet,
+                no_kk: currentNoKK,
+                nik: nik,
+                nama: namaRaw,
+                jk: jk,
+                hubungan: hubungan,
+                ttl: tempatLahir ? (tglLahir ? `${tempatLahir}, ${tglLahir}` : tempatLahir) : tglLahir,
+                usia_text: usiaRaw,
+                usia: parseInt(usiaRaw) || 0,
+                pekerjaan: pekerjaan,
+                isPUS: isPUS,
+                isWUS: isWUS,
+                kb: cleanKB,
+                isBumil: isBumil,
+                isBalita: isBalita,
+                isRemaja: isRemaja,
+                isLansia: isLansia,
+                is4T: is4T,
+                isALKI: isALKI,
+                isPosbindu: isPosbindu,
+                updatedAt: new Date().toISOString()
+              });
+            }
+          });
+
+          if (batchData.length === 0) {
+            alert("Tidak ditemukan baris data yang valid.");
+            applyFilters();
+            return;
+          }
+
+          const konfirmasi = confirm(`Ditemukan ${batchData.length} data sasaran.\n\nData akan dialokasikan ke: ${namaDesaTarget}.\n\nLanjutkan sinkronisasi?`);
+          if (!konfirmasi) {
+            applyFilters();
+            return;
+          }
+
+          if (db) {
+            const CHUNK_SIZE = 400;
+            let totalProcessed = 0;
+
+            for (let i = 0; i < batchData.length; i += CHUNK_SIZE) {
+              const chunk = batchData.slice(i, i + CHUNK_SIZE);
+              let batch = db.batch();
+
+              chunk.forEach(item => {
+                const docRef = db.collection("penduduk_puskesmas").doc(item.docId);
+                const { docId, ...dataToSave } = item;
+                batch.set(docRef, dataToSave, { merge: true });
+              });
+
+              await batch.commit();
+              totalProcessed += chunk.length;
+              statusEl.innerHTML = `<span class="text-teal-700 font-semibold"><i class="fa-solid fa-spinner fa-spin"></i> Sinkronisasi ${namaDesaTarget}... (${totalProcessed}/${batchData.length})</span>`;
+            }
+
+            alert(`Sukses! ${batchData.length} data ${namaDesaTarget} berhasil tersimpan ke Firebase.`);
+          } else {
+            allData = batchData.map(d => ({ id: d.docId, ...d }));
+            updateDashboard();
+            applyFilters();
+            alert(`Mode Demo: ${batchData.length} data berhasil dimuat.`);
+          }
+
+        } catch (err) {
+          console.error("Error import:", err);
+          alert("Gagal mengimpor: " + err.message);
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function exportToExcel() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase();
+      const rtFilter = document.getElementById('filterRT').value;
+      const isLogin = !!currentUser;
+
+      const filtered = allData.filter(p => {
+        if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
+
+        const matchSearch = (
+          (p.nama && p.nama.toLowerCase().includes(keyword)) ||
+          (p.nik && p.nik.toLowerCase().includes(keyword)) ||
+          (p.no_kk && p.no_kk.toLowerCase().includes(keyword))
+        );
+        const matchRT = rtFilter === "" || String(p.rt) === String(rtFilter);
+        return matchSearch && matchRT;
+      });
+
+      const exportRows = filtered.map((d, idx) => ({
+        "No": idx + 1,
+        "Wilayah Desa": getDesaNama(getDesaClean(d)),
+        "RT": d.rt,
+        "No KK": isLogin ? d.no_kk : maskSensitive(d.no_kk),
+        "NIK": isLogin ? d.nik : maskSensitive(d.nik),
+        "Nama": d.nama,
+        "JK": d.jk,
+        "Hubungan": d.hubungan,
+        "TTL": d.ttl,
+        "Usia": d.usia_text || d.usia,
+        "Pekerjaan": d.pekerjaan,
+        "PUS": d.isPUS ? "Ya" : "-",
+        "WUS": d.isWUS ? "Ya" : "-",
+        "Metode KB": d.kb || "-",
+        "Ibu Hamil": d.isBumil ? "Ya" : "-",
+        "Balita": d.isBalita ? "Ya" : "-",
+        "4T": isLogin ? (d.is4T ? "Ya" : "-") : "Terkunci",
+        "ALKI": isLogin ? (d.isALKI ? "Ya" : "-") : "Terkunci"
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sasaran Bidan");
+      const labelFile = activeDesa === 'ALL' ? 'Seluruh_Puskesmas' : activeDesa;
+      XLSX.writeFile(wb, `Laporan_Sasaran_${labelFile}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+  </script>
+</body>
+</html>
