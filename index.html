@@ -81,6 +81,9 @@
           <button onclick="triggerExcelUpload()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-file-excel"></i> <span class="hidden md:inline">Import Excel</span>
           </button>
+          <button onclick="hapusDataDesaAktif()" class="bg-rose-700 hover:bg-rose-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm" title="Hapus Data Desa Ini">
+            <i class="fa-solid fa-trash-can"></i> <span class="hidden md:inline">Reset Data Desa</span>
+          </button>
           <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
         </div>
 
@@ -210,17 +213,6 @@
         <div class="sm:col-span-3">
           <select id="filterRT" onchange="applyFilters()" class="w-full py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white">
             <option value="">Semua Wilayah RT</option>
-            <option value="1">RT 01</option>
-            <option value="2">RT 02</option>
-            <option value="3">RT 03</option>
-            <option value="4">RT 04</option>
-            <option value="5">RT 05</option>
-            <option value="6">RT 06</option>
-            <option value="7">RT 07</option>
-            <option value="8">RT 08</option>
-            <option value="9">RT 09</option>
-            <option value="10">RT 10</option>
-            <option value="11">RT 11</option>
           </select>
         </div>
 
@@ -260,7 +252,7 @@
       <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-2">
         <span id="recordCount">Menampilkan 0 data</span>
         <div class="flex items-center gap-3">
-          <span id="footerDesaLabel">Wilayah: Desa Sampanahan</span>
+          <span id="footerDesaLabel">Wilayah: Desa Sampanahan Hilir</span>
           <span class="text-slate-300">&bull;</span>
           <span id="footerVersionText" class="font-mono text-slate-400">SiBidan v1.2.0</span>
         </div>
@@ -296,26 +288,8 @@
       <div class="p-4 sm:p-6 overflow-y-auto overflow-x-auto flex-1 space-y-4">
         <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm">
           <table class="w-full text-xs text-center border-collapse">
-            <thead class="bg-teal-900 text-white uppercase font-bold text-[11px] tracking-wider">
-              <tr class="divide-x divide-teal-800">
-                <th rowspan="2" class="p-2.5 bg-teal-950 text-left min-w-[140px]">Kategori Sasaran</th>
-                <th colspan="11" class="p-2 border-b border-teal-800 text-teal-200">Rincian Wilayah Rukun Tetangga (RT)</th>
-                <th rowspan="2" class="p-2.5 bg-teal-950 min-w-[70px] text-amber-300 font-extrabold">TOTAL</th>
-              </tr>
-              <tr class="divide-x divide-teal-800 bg-teal-800 text-[10px]">
-                <th class="p-1.5 w-10">RT 1</th>
-                <th class="p-1.5 w-10">RT 2</th>
-                <th class="p-1.5 w-10">RT 3</th>
-                <th class="p-1.5 w-10">RT 4</th>
-                <th class="p-1.5 w-10">RT 5</th>
-                <th class="p-1.5 w-10">RT 6</th>
-                <th class="p-1.5 w-10">RT 7</th>
-                <th class="p-1.5 w-10">RT 8</th>
-                <th class="p-1.5 w-10">RT 9</th>
-                <th class="p-1.5 w-10">RT 10</th>
-                <th class="p-1.5 w-10">RT 11</th>
-              </tr>
-            </thead>
+            <thead class="bg-teal-900 text-white uppercase font-bold text-[11px] tracking-wider" id="matriksTableHead">
+              </thead>
             <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700">
               </tbody>
           </table>
@@ -323,7 +297,7 @@
       </div>
 
       <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 no-print">
-        <span>* Data matriks otomatis dihitung dari database Firestore real-time.</span>
+        <span>* Data matriks otomatis terhitung langsung dari database sesuai desa yang dipilih.</span>
         <button onclick="closeModalMatriks()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition">Tutup</button>
       </div>
     </div>
@@ -393,7 +367,7 @@
               </div>
               <div class="sm:col-span-2">
                 <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-0.5">Catatan Perubahan (Changelog)</label>
-                <input type="text" id="inputVersionChangelog" placeholder="Penambahan matriks rekap desa & PWS" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                <input type="text" id="inputVersionChangelog" placeholder="Penambahan matriks rekap desa dinamis & PWS" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
               </div>
             </div>
             <div class="flex justify-end pt-1">
@@ -593,8 +567,8 @@
     let activeDesa = 'ALL';
 
     const defaultDesaData = [
-      { id: 'SAMPANAHAN', nama: 'Desa Sampanahan' },
       { id: 'SAMPANAHAN_HILIR', nama: 'Desa Sampanahan Hilir' },
+      { id: 'SAMPANAHAN', nama: 'Desa Sampanahan' },
       { id: 'PAPAAN', nama: 'Desa Papaan' },
       { id: 'GUNUNG_BATU_BESAR', nama: 'Desa Gunung Batu Besar' },
       { id: 'SUKAMAJU', nama: 'Desa Sukamaju' },
@@ -730,6 +704,32 @@
       selectForm.innerHTML = formOptionsHTML;
       selectPilih.value = currentSelected;
       activeDesa = selectPilih.value;
+      updateRTFilterDropdown();
+    }
+
+    // Perbarui dropdown filter RT di halaman utama sesuai desa aktif
+    function updateRTFilterDropdown() {
+      const filterRT = document.getElementById('filterRT');
+      const curVal = filterRT.value;
+
+      // Kumpulkan RT unik yang ada di desa terpilih
+      const targetData = allData.filter(p => (activeDesa === 'ALL') || (getDesaClean(p) === activeDesa));
+      const uniqueRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
+      uniqueRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+
+      let optHTML = '<option value="">Semua Wilayah RT</option>';
+      if (uniqueRTs.length > 0) {
+        uniqueRTs.forEach(rt => {
+          optHTML += `<option value="${rt}">RT ${rt}</option>`;
+        });
+      } else {
+        for (let i = 1; i <= 11; i++) {
+          optHTML += `<option value="${i}">RT 0${i}</option>`;
+        }
+      }
+
+      filterRT.innerHTML = optHTML;
+      filterRT.value = curVal;
     }
 
     // Auth Listener
@@ -772,6 +772,7 @@
           allData.push({ id: doc.id, ...doc.data() });
         });
         updateDashboard();
+        updateRTFilterDropdown();
         applyFilters();
       });
     }
@@ -780,10 +781,10 @@
     initAppVersionListener();
 
     // ==========================================
-    // 2. MODAL MATRIKS REKAPAN DESA
+    // 2. MODAL MATRIKS REKAPAN AUTO-ADAPTIF
     // ==========================================
     function openModalMatriks() {
-      const namaDesa = activeDesa === 'ALL' ? 'Semua Wilayah Puskesmas' : getDesaNama(activeDesa);
+      const namaDesa = activeDesa === 'ALL' ? 'Seluruh Wilayah Puskesmas' : getDesaNama(activeDesa);
       document.getElementById('matriksModalTitle').innerText = `Matriks Rekapitulasi Data Sasaran - ${namaDesa}`;
       renderMatriksTable();
       document.getElementById('modalMatriks').classList.remove('hidden');
@@ -793,110 +794,144 @@
       document.getElementById('modalMatriks').classList.add('hidden');
     }
 
+    // Fungsi Kalkulasi Matriks Otomatis
     function calculateMatriksData() {
-      const targetData = allData.filter(p => {
-        if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
-        return true;
-      });
+      const isGlobal = (activeDesa === 'ALL');
+      let targetData = allData;
+      if (!isGlobal) {
+        targetData = allData.filter(p => getDesaClean(p) === activeDesa);
+      }
 
-      const rtList = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
-      
       const metrics = {
-        kk: { label: "JUMLAH KEPALA KELUARGA (KK)", rts: {}, total: 0, isHeader: true },
-        jiwa_l: { label: "Jumlah Penduduk Laki-laki (L)", rts: {}, total: 0 },
-        jiwa_p: { label: "Jumlah Penduduk Perempuan (P)", rts: {}, total: 0 },
-        jiwa_total: { label: "TOTAL JUMLAH PENDUDUK", rts: {}, total: 0, isHighlight: true },
-        pus: { label: "Pasangan Usia Subur (PUS)", rts: {}, total: 0 },
-        wus: { label: "Wanita Usia Subur (WUS)", rts: {}, total: 0 },
-        bumil: { label: "Ibu Hamil (Bumil)", rts: {}, total: 0, isHeader: true },
-        bayi: { label: "Bayi (<1 Tahun)", rts: {}, total: 0 },
-        balita: { label: "Anak Balita (1 - 5 Tahun)", rts: {}, total: 0 },
-        remaja: { label: "Remaja (10 - 18 Tahun)", rts: {}, total: 0 },
-        posbindu: { label: "Posbindu PTM (15 - 59 Tahun)", rts: {}, total: 0 },
-        pralansia: { label: "Pra Lansia (45 - 60 Tahun)", rts: {}, total: 0 },
-        lansia_6070: { label: "Lansia (>60 - 70 Tahun)", rts: {}, total: 0 },
-        lansia_70: { label: "Lansia (>70 Tahun)", rts: {}, total: 0 },
-        kb_suntik: { label: "Akseptor KB: Suntik", rts: {}, total: 0, isHeader: true },
-        kb_pil: { label: "Akseptor KB: Pil", rts: {}, total: 0 },
-        kb_implan: { label: "Akseptor KB: Implan", rts: {}, total: 0 },
-        kb_iud: { label: "Akseptor KB: IUD", rts: {}, total: 0 },
-        kb_mow: { label: "Akseptor KB: MOW", rts: {}, total: 0 },
-        kb_mop: { label: "Akseptor KB: MOP", rts: {}, total: 0 },
-        kb_kondom: { label: "Akseptor KB: Kondom", rts: {}, total: 0 },
-        kb_total: { label: "TOTAL PESERTA KB AKTIF", rts: {}, total: 0, isHighlight: true },
-        risti_4t: { label: "Risiko Tinggi 4T (Kehamilan)", rts: {}, total: 0, isDanger: true },
-        risti_alki: { label: "Risiko ALKI", rts: {}, total: 0, isDanger: true }
+        kk: { label: "JUMLAH KEPALA KELUARGA (KK)", cols: {}, total: 0, isHeader: true },
+        jiwa_l: { label: "Jumlah Penduduk Laki-laki (L)", cols: {}, total: 0 },
+        jiwa_p: { label: "Jumlah Penduduk Perempuan (P)", cols: {}, total: 0 },
+        jiwa_total: { label: "TOTAL JUMLAH PENDUDUK", cols: {}, total: 0, isHighlight: true },
+        pus: { label: "Pasangan Usia Subur (PUS)", cols: {}, total: 0 },
+        wus: { label: "Wanita Usia Subur (WUS)", cols: {}, total: 0 },
+        bumil: { label: "Ibu Hamil (Bumil)", cols: {}, total: 0, isHeader: true },
+        bayi: { label: "Bayi (<1 Tahun)", cols: {}, total: 0 },
+        balita: { label: "Anak Balita (1 - 5 Tahun)", cols: {}, total: 0 },
+        remaja: { label: "Remaja (10 - 18 Tahun)", cols: {}, total: 0 },
+        posbindu: { label: "Posbindu PTM (15 - 59 Tahun)", cols: {}, total: 0 },
+        pralansia: { label: "Pra Lansia (45 - 60 Tahun)", cols: {}, total: 0 },
+        lansia_6070: { label: "Lansia (>60 - 70 Tahun)", cols: {}, total: 0 },
+        lansia_70: { label: "Lansia (>70 Tahun)", cols: {}, total: 0 },
+        kb_suntik: { label: "Akseptor KB: Suntik", cols: {}, total: 0, isHeader: true },
+        kb_pil: { label: "Akseptor KB: Pil", cols: {}, total: 0 },
+        kb_implan: { label: "Akseptor KB: Implan", cols: {}, total: 0 },
+        kb_iud: { label: "Akseptor KB: IUD", cols: {}, total: 0 },
+        kb_mow: { label: "Akseptor KB: MOW", cols: {}, total: 0 },
+        kb_mop: { label: "Akseptor KB: MOP", cols: {}, total: 0 },
+        kb_kondom: { label: "Akseptor KB: Kondom", cols: {}, total: 0 },
+        kb_total: { label: "TOTAL PESERTA KB AKTIF", cols: {}, total: 0, isHighlight: true },
+        risti_4t: { label: "Risiko Tinggi 4T (Kehamilan)", cols: {}, total: 0, isDanger: true },
+        risti_alki: { label: "Risiko ALKI", cols: {}, total: 0, isDanger: true }
       };
 
+      let columns = [];
+
+      if (isGlobal) {
+        // Mode Puskesmas Induk: Kolom adalah Seluruh Desa Binaan
+        columns = masterDesaList.map(d => ({ key: d.id, label: d.nama.replace('Desa ', '') }));
+      } else {
+        // Mode Per Desa: Kolom adalah RT yang ada di desa tersebut
+        const foundRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
+        foundRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+        
+        if (foundRTs.length === 0) {
+          // Fallback jika belum ada data
+          for (let i = 1; i <= 9; i++) foundRTs.push(String(i));
+        }
+        columns = foundRTs.map(rt => ({ key: rt, label: `RT ${rt}` }));
+      }
+
+      // Inisialisasi angka 0 per kolom
       Object.keys(metrics).forEach(k => {
-        rtList.forEach(rt => { metrics[k].rts[rt] = 0; });
+        columns.forEach(c => { metrics[k].cols[c.key] = 0; });
       });
 
+      // Lacak No KK unik per kolom
       const kkSets = {};
-      rtList.forEach(rt => { kkSets[rt] = new Set(); });
+      columns.forEach(c => { kkSets[c.key] = new Set(); });
 
       targetData.forEach(p => {
-        const rt = String(p.rt).trim();
-        if (!rtList.includes(rt)) return;
+        const colKey = isGlobal ? getDesaClean(p) : String(p.rt).trim();
+        if (!columns.some(c => c.key === colKey)) return;
 
         if (p.no_kk && p.no_kk.length > 5) {
-          kkSets[rt].add(p.no_kk);
+          kkSets[colKey].add(p.no_kk);
         }
 
         const usiaNum = parseInt(p.usia) || 0;
         const isBulan = p.usia_text && p.usia_text.toLowerCase().includes('bulan');
 
-        if (p.jk === 'L') metrics.jiwa_l.rts[rt]++;
-        if (p.jk === 'P') metrics.jiwa_p.rts[rt]++;
-        metrics.jiwa_total.rts[rt]++;
+        if (p.jk === 'L') metrics.jiwa_l.cols[colKey]++;
+        if (p.jk === 'P') metrics.jiwa_p.cols[colKey]++;
+        metrics.jiwa_total.cols[colKey]++;
 
-        if (p.isPUS) metrics.pus.rts[rt]++;
-        if (p.isWUS) metrics.wus.rts[rt]++;
-        if (p.isBumil) metrics.bumil.rts[rt]++;
+        if (p.isPUS) metrics.pus.cols[colKey]++;
+        if (p.isWUS) metrics.wus.cols[colKey]++;
+        if (p.isBumil) metrics.bumil.cols[colKey]++;
         
         if (p.isBayi || (isBulan && parseInt(p.usia_text) <= 12)) {
-          metrics.bayi.rts[rt]++;
+          metrics.bayi.cols[colKey]++;
         } else if (p.isBalita || isBulan || (usiaNum >= 1 && usiaNum <= 5)) {
-          metrics.balita.rts[rt]++;
+          metrics.balita.cols[colKey]++;
         }
 
-        if (p.isRemaja || (usiaNum >= 10 && usiaNum <= 18)) metrics.remaja.rts[rt]++;
-        if (p.isPosbindu || (usiaNum >= 15 && usiaNum <= 59)) metrics.posbindu.rts[rt]++;
-        if (usiaNum >= 45 && usiaNum <= 60) metrics.pralansia.rts[rt]++;
-        if (usiaNum > 60 && usiaNum <= 70) metrics.lansia_6070.rts[rt]++;
-        if (usiaNum > 70) metrics.lansia_70.rts[rt]++;
+        if (p.isRemaja || (usiaNum >= 10 && usiaNum <= 18)) metrics.remaja.cols[colKey]++;
+        if (p.isPosbindu || (usiaNum >= 15 && usiaNum <= 59)) metrics.posbindu.cols[colKey]++;
+        if (usiaNum >= 45 && usiaNum <= 60) metrics.pralansia.cols[colKey]++;
+        if (usiaNum > 60 && usiaNum <= 70) metrics.lansia_6070.cols[colKey]++;
+        if (usiaNum > 70) metrics.lansia_70.cols[colKey]++;
 
         const kbClean = (p.kb || '').toUpperCase();
-        if (kbClean.includes('SUNTIK')) { metrics.kb_suntik.rts[rt]++; metrics.kb_total.rts[rt]++; }
-        else if (kbClean.includes('PIL')) { metrics.kb_pil.rts[rt]++; metrics.kb_total.rts[rt]++; }
-        else if (kbClean.includes('IMPLAN')) { metrics.kb_implan.rts[rt]++; metrics.kb_total.rts[rt]++; }
-        else if (kbClean.includes('IUD')) { metrics.kb_iud.rts[rt]++; metrics.kb_total.rts[rt]++; }
-        else if (kbClean.includes('MOW')) { metrics.kb_mow.rts[rt]++; metrics.kb_total.rts[rt]++; }
-        else if (kbClean.includes('MOP')) { metrics.kb_mop.rts[rt]++; metrics.kb_total.rts[rt]++; }
-        else if (kbClean.includes('KONDOM')) { metrics.kb_kondom.rts[rt]++; metrics.kb_total.rts[rt]++; }
-        else if (kbClean !== '' && kbClean !== '-') { metrics.kb_total.rts[rt]++; }
+        if (kbClean.includes('SUNTIK')) { metrics.kb_suntik.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
+        else if (kbClean.includes('PIL')) { metrics.kb_pil.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
+        else if (kbClean.includes('IMPLAN')) { metrics.kb_implan.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
+        else if (kbClean.includes('IUD')) { metrics.kb_iud.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
+        else if (kbClean.includes('MOW')) { metrics.kb_mow.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
+        else if (kbClean.includes('MOP')) { metrics.kb_mop.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
+        else if (kbClean.includes('KONDOM')) { metrics.kb_kondom.cols[colKey]++; metrics.kb_total.cols[colKey]++; }
+        else if (kbClean !== '' && kbClean !== '-') { metrics.kb_total.cols[colKey]++; }
 
-        if (p.is4T) metrics.risti_4t.rts[rt]++;
-        if (p.isALKI) metrics.risti_alki.rts[rt]++;
+        if (p.is4T) metrics.risti_4t.cols[colKey]++;
+        if (p.isALKI) metrics.risti_alki.cols[colKey]++;
       });
 
-      rtList.forEach(rt => {
-        metrics.kk.rts[rt] = kkSets[rt].size;
+      columns.forEach(c => {
+        metrics.kk.cols[c.key] = kkSets[c.key].size;
       });
 
       Object.keys(metrics).forEach(k => {
         let sum = 0;
-        rtList.forEach(rt => { sum += metrics[k].rts[rt]; });
+        columns.forEach(c => { sum += metrics[k].cols[c.key]; });
         metrics[k].total = sum;
       });
 
-      return { rtList, metrics };
+      return { isGlobal, columns, metrics };
     }
 
     function renderMatriksTable() {
-      const { rtList, metrics } = calculateMatriksData();
+      const { isGlobal, columns, metrics } = calculateMatriksData();
+      const thead = document.getElementById('matriksTableHead');
       const tbody = document.getElementById('matriksTableBody');
 
+      // 1. Render Header Kolom Dinamis
+      const subTitleCols = isGlobal ? 'Rincian Desa Binaan Puskesmas' : 'Rincian Wilayah Rukun Tetangga (RT)';
+      thead.innerHTML = `
+        <tr class="divide-x divide-teal-800">
+          <th rowspan="2" class="p-2.5 bg-teal-950 text-left min-w-[150px]">Kategori Sasaran</th>
+          <th colspan="${columns.length}" class="p-2 border-b border-teal-800 text-teal-200">${subTitleCols}</th>
+          <th rowspan="2" class="p-2.5 bg-teal-950 min-w-[75px] text-amber-300 font-extrabold">TOTAL</th>
+        </tr>
+        <tr class="divide-x divide-teal-800 bg-teal-800 text-[10px]">
+          ${columns.map(c => `<th class="p-1.5 min-w-[45px]">${c.label}</th>`).join('')}
+        </tr>
+      `;
+
+      // 2. Render Baris Data Matriks
       tbody.innerHTML = Object.keys(metrics).map(k => {
         const item = metrics[k];
         let rowClass = "hover:bg-teal-50/60 transition";
@@ -910,14 +945,14 @@
           rowClass = "bg-rose-50/50 hover:bg-rose-100/50 text-rose-900 font-medium";
         }
 
-        const rtCols = rtList.map(rt => `
-          <td class="p-2 border-x border-slate-200">${item.rts[rt] === 0 ? '<span class="text-slate-300">-</span>' : item.rts[rt]}</td>
+        const colsHTML = columns.map(c => `
+          <td class="p-2 border-x border-slate-200">${item.cols[c.key] === 0 ? '<span class="text-slate-300">-</span>' : item.cols[c.key]}</td>
         `).join('');
 
         return `
           <tr class="${rowClass}">
             <td class="p-2.5 border-r border-slate-300 ${labelClass}">${item.label}</td>
-            ${rtCols}
+            ${colsHTML}
             <td class="p-2 font-bold bg-slate-100 border-l border-slate-300 text-teal-900">${item.total === 0 ? '<span class="text-slate-300">-</span>' : item.total}</td>
           </tr>
         `;
@@ -925,16 +960,16 @@
     }
 
     function exportMatriksToExcel() {
-      const { rtList, metrics } = calculateMatriksData();
+      const { columns, metrics } = calculateMatriksData();
       const namaDesa = activeDesa === 'ALL' ? 'Semua_Puskesmas' : activeDesa;
 
       const exportRows = Object.keys(metrics).map(k => {
         const item = metrics[k];
         const rowObj = { "Indikator / Kategori Sasaran": item.label };
-        rtList.forEach(rt => {
-          rowObj[`RT ${rt}`] = item.rts[rt];
+        columns.forEach(c => {
+          rowObj[c.label] = item.cols[c.key];
         });
-        rowObj["TOTAL DESA"] = item.total;
+        rowObj["TOTAL"] = item.total;
         return rowObj;
       });
 
@@ -945,7 +980,50 @@
     }
 
     // ==========================================
-    // 3. MANAJEMEN DESA & AUTH
+    // 3. RESET DATA DESA AKTIF
+    // ==========================================
+    async function hapusDataDesaAktif() {
+      if (!currentUser) return alert("Hanya admin/petugas yang berhak mereset data.");
+      
+      const namaDesa = activeDesa === 'ALL' ? 'SELURUH WILAYAH PUSKESMAS' : getDesaNama(activeDesa);
+      const konfirmasi = confirm(`PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA data sasaran di ${namaDesa}?\n\nData yang dihapus dari Firebase tidak dapat dikembalikan.`);
+      if (!konfirmasi) return;
+
+      const statusEl = document.getElementById('dbStatus');
+      statusEl.innerHTML = '<span class="text-rose-600 font-semibold"><i class="fa-solid fa-spinner fa-spin"></i> Menghapus data...</span>';
+
+      try {
+        const snapshot = await db.collection("penduduk_puskesmas").get();
+        let batch = db.batch();
+        let count = 0;
+        let deletedCount = 0;
+
+        for (const doc of snapshot.docs) {
+          const data = doc.data();
+          const desaCocok = (activeDesa === 'ALL') || (getDesaClean(data) === activeDesa);
+          
+          if (desaCocok) {
+            batch.delete(doc.ref);
+            count++;
+            deletedCount++;
+            if (count % 400 === 0) {
+              await batch.commit();
+              batch = db.batch();
+            }
+          }
+        }
+
+        await batch.commit();
+        alert(`Sukses! Sebanyak ${deletedCount} data penduduk di ${namaDesa} berhasil dibersihkan dari Firebase.`);
+      } catch (err) {
+        alert("Gagal menghapus data: " + err.message);
+      } finally {
+        statusEl.innerHTML = '<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-cloud"></i> Firebase Terhubung</span>';
+      }
+    }
+
+    // ==========================================
+    // 4. MANAJEMEN MASTER DESA & AUTH
     // ==========================================
     function openModalDesa() {
       if (!currentUser) return alert("Hanya admin yang dapat mengelola sistem.");
@@ -1024,6 +1102,7 @@
       const d = masterDesaList.find(x => x.id === activeDesa);
       footerLabel.innerText = activeDesa === 'ALL' ? "Wilayah: Seluruh Wilayah Puskesmas" : `Wilayah: ${d ? d.nama : activeDesa}`;
       updateDashboard();
+      updateRTFilterDropdown();
       applyFilters();
     }
 
@@ -1089,7 +1168,7 @@
     }
 
     // ==========================================
-    // 4. DASHBOARD & FILTERING
+    // 5. DASHBOARD & FILTERING
     // ==========================================
     function updateDashboard() {
       const filteredByDesa = allData.filter(p => {
@@ -1230,14 +1309,14 @@
     }
 
     // ==========================================
-    // 5. CRUD DATA SASARAN
+    // 6. CRUD DATA SASARAN
     // ==========================================
     function openModalTambah() {
       if (!currentUser) return alert("Hanya petugas yang berhak menambah sasaran.");
       document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus"></i> Tambah Sasaran Baru';
       document.getElementById('pendudukForm').reset();
       document.getElementById('formDocId').value = '';
-      document.getElementById('formDesa').value = (activeDesa !== 'ALL') ? activeDesa : (masterDesaList[0]?.id || 'SAMPANAHAN');
+      document.getElementById('formDesa').value = (activeDesa !== 'ALL') ? activeDesa : (masterDesaList[0]?.id || 'SAMPANAHAN_HILIR');
       document.getElementById('modalForm').classList.remove('hidden');
     }
 
@@ -1322,6 +1401,7 @@
         }
         closeModal();
         updateDashboard();
+        updateRTFilterDropdown();
         applyFilters();
         return;
       }
@@ -1351,6 +1431,7 @@
       if (!db) {
         allData = allData.filter(d => d.id !== id);
         updateDashboard();
+        updateRTFilterDropdown();
         applyFilters();
         return;
       }
@@ -1362,7 +1443,7 @@
     }
 
     // ==========================================
-    // 6. IMPORT & EKSPOR EXCEL (MULTI-SHEET PER RT)
+    // 7. IMPORT EXCEL AUTO-HEADER DETECTION
     // ==========================================
     function triggerExcelUpload() {
       if (activeDesa === 'ALL') {
@@ -1397,65 +1478,126 @@
 
           workbook.SheetNames.forEach(sheetName => {
             const cleanSheetName = sheetName.toUpperCase().replace(/\s+/g, '');
-            if (!cleanSheetName.includes('RT') || cleanSheetName.includes('DATA')) return;
+            if (!cleanSheetName.includes('RT') || cleanSheetName.includes('DATA') || cleanSheetName.includes('REKAP')) return;
 
             const rtFromSheet = cleanSheetName.replace(/\D/g, '') || '1';
             const sheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
+            let headerRowIdx = -1;
+            let colMap = {
+              rt: -1, no_kk: -1, nik: -1, nama: -1, jk: -1, hubungan: -1,
+              tempatLahir: -1, tglLahir: -1, usia: -1, pekerjaan: -1,
+              pus: -1, wus: -1, kb: -1, bumil: -1, bayi: -1, balita: -1,
+              pralansia: -1, lansia_6070: -1, lansia_70: -1, remaja: -1,
+              risti4T: -1, ristiALKI: -1, posbindu: -1
+            };
+
+            for (let r = 0; r < Math.min(6, json.length); r++) {
+              const row = json[r];
+              const rowStr = row.map(x => String(x).toUpperCase().trim()).join(' ');
+              
+              if (rowStr.includes('NIK') || rowStr.includes('NAMA')) {
+                headerRowIdx = r;
+                row.forEach((colVal, cIdx) => {
+                  const val = String(colVal).toUpperCase().trim();
+                  if (val.includes('RT/RW') || val === 'RT') colMap.rt = cIdx;
+                  else if (val.includes('NO KK') || val === 'KK') colMap.no_kk = cIdx;
+                  else if (val.includes('NIK')) colMap.nik = cIdx;
+                  else if (val.includes('NAMA')) colMap.nama = cIdx;
+                  else if (val === 'JK' || val.includes('KELAMIN')) colMap.jk = cIdx;
+                  else if (val.includes('HUBUNGAN')) colMap.hubungan = cIdx;
+                  else if (val.includes('TEMPAT LAHIR') || val.includes('TEMPAT')) colMap.tempatLahir = cIdx;
+                  else if (val.includes('TGL LAHIR') || val.includes('TANGGAL')) colMap.tglLahir = cIdx;
+                  else if (val.includes('USIA')) colMap.usia = cIdx;
+                  else if (val.includes('PEKERJAAN')) colMap.pekerjaan = cIdx;
+                  else if (val === 'PUS') colMap.pus = cIdx;
+                  else if (val === 'WUS') colMap.wus = cIdx;
+                  else if (val === 'KB') colMap.kb = cIdx;
+                  else if (val.includes('HAMIL') || val === 'BUMIL') colMap.bumil = cIdx;
+                  else if (val.includes('BAYI')) colMap.bayi = cIdx;
+                  else if (val.includes('BALITA')) colMap.balita = cIdx;
+                  else if (val.includes('45-60') || val.includes('PRA LANSIA') || val.includes('PRALANSIA')) colMap.pralansia = cIdx;
+                  else if (val.includes('60-70')) colMap.lansia_6070 = cIdx;
+                  else if (val.includes('>70') || val.includes('70 TH')) colMap.lansia_70 = cIdx;
+                  else if (val.includes('REMAJA')) colMap.remaja = cIdx;
+                  else if (val === '4T') colMap.risti4T = cIdx;
+                  else if (val === 'ALKI') colMap.ristiALKI = cIdx;
+                  else if (val.includes('POSBINDU') || val.includes('15-59') || val.includes('15-60')) colMap.posbindu = cIdx;
+                });
+                break;
+              }
+            }
+
+            if (colMap.nama === -1) colMap.nama = 5;
+            if (colMap.nik === -1) colMap.nik = 3;
+            if (colMap.no_kk === -1) colMap.no_kk = 2;
+            if (colMap.jk === -1) colMap.jk = 6;
+            if (colMap.hubungan === -1) colMap.hubungan = 7;
+            if (colMap.tempatLahir === -1) colMap.tempatLahir = 8;
+            if (colMap.tglLahir === -1) colMap.tglLahir = 9;
+            if (colMap.usia === -1) colMap.usia = 10;
+            if (colMap.pekerjaan === -1) colMap.pekerjaan = 14;
+
             let currentRT = rtFromSheet;
             let currentNoKK = '';
 
-            for (let r = 0; r < json.length; r++) {
+            for (let r = headerRowIdx + 1; r < json.length; r++) {
               const row = json[r];
               if (!row || row.length === 0) continue;
 
-              const namaRaw = row[6] !== undefined ? String(row[6]).trim() : '';
+              const namaRaw = colMap.nama !== -1 && row[colMap.nama] !== undefined ? String(row[colMap.nama]).trim() : '';
 
               if (!namaRaw || 
-                  namaRaw.toLowerCase().includes('nama anggota') || 
-                  namaRaw.toLowerCase().includes('nama') ||
+                  namaRaw.toUpperCase().includes('NAMA') || 
                   namaRaw === '0' ||
                   namaRaw === '-' ||
-                  namaRaw.toLowerCase().includes('kabupaten') ||
-                  namaRaw.toLowerCase().includes('desa')) {
+                  namaRaw.toUpperCase().includes('KABUPATEN') ||
+                  namaRaw.toUpperCase().includes('DESA') ||
+                  namaRaw.toUpperCase().includes('JUMLAH') ||
+                  namaRaw.toUpperCase().includes('LAKI')) {
                 continue;
               }
 
-              const rowNoKK = row[3] ? String(row[3]).replace(/['",\s]/g, '').trim() : '';
+              const rowNoKK = colMap.no_kk !== -1 && row[colMap.no_kk] ? String(row[colMap.no_kk]).replace(/['",\s]/g, '').trim() : '';
               if (rowNoKK && rowNoKK !== '-' && rowNoKK.length > 5) currentNoKK = rowNoKK;
 
-              const rowRT = row[1] ? String(row[1]).replace(/\D/g, '').trim() : '';
-              if (rowRT) currentRT = rowRT;
+              const rowRT = colMap.rt !== -1 && row[colMap.rt] ? String(row[colMap.rt]).replace(/\D/g, '').trim() : '';
+              if (rowRT) {
+                currentRT = parseInt(rowRT) || rtFromSheet;
+              }
 
-              const nik = row[4] ? String(row[4]).replace(/['",\s]/g, '').trim() : '';
-              const jk = row[7] ? String(row[7]).trim().toUpperCase() : '';
-              const hubungan = row[8] ? String(row[8]).trim() : '';
-              const tempatLahir = row[9] ? String(row[9]).trim() : '';
-              const tglLahir = row[10] ? String(row[10]).trim() : '';
-              const usiaRaw = row[11] ? String(row[11]).trim() : '';
-              const pekerjaan = row[15] ? String(row[15]).trim() : '';
+              const nik = colMap.nik !== -1 && row[colMap.nik] ? String(row[colMap.nik]).replace(/['",\s]/g, '').trim() : '';
+              const jk = colMap.jk !== -1 && row[colMap.jk] ? String(row[colMap.jk]).trim().toUpperCase() : '';
+              const hubungan = colMap.hubungan !== -1 && row[colMap.hubungan] ? String(row[colMap.hubungan]).trim() : '';
+              const tempatLahir = colMap.tempatLahir !== -1 && row[colMap.tempatLahir] ? String(row[colMap.tempatLahir]).trim() : '';
+              const tglLahir = colMap.tglLahir !== -1 && row[colMap.tglLahir] ? String(row[colMap.tglLahir]).trim() : '';
+              const usiaRaw = colMap.usia !== -1 && row[colMap.usia] ? String(row[colMap.usia]).trim() : '';
+              const pekerjaan = colMap.pekerjaan !== -1 && row[colMap.pekerjaan] ? String(row[colMap.pekerjaan]).trim() : '';
 
-              const pusVal = row[16] ? String(row[16]).trim() : '';
-              const wusVal = row[17] ? String(row[17]).trim() : '';
-              const kbVal = row[18] ? String(row[18]).trim() : '';
-              const bumilVal = row[19] ? String(row[19]).trim() : '';
-              const bayiVal = row[20] ? String(row[20]).trim() : '';
-              const balitaVal = row[21] ? String(row[21]).trim() : '';
-              const lansia6070 = row[23] ? String(row[23]).trim() : '';
-              const lansia70 = row[24] ? String(row[24]).trim() : '';
-              const remajaVal = (row[25] ? String(row[25]).trim() : '') || (row[26] ? String(row[26]).trim() : '');
-              const risti4T = row[27] ? String(row[27]).trim() : '';
-              const ristiALKI = row[28] ? String(row[28]).trim() : '';
-              const posbinduVal = row[29] ? String(row[29]).trim() : '';
+              const getVal = (idx) => (idx !== -1 && row[idx]) ? String(row[idx]).trim() : '';
+
+              const pusVal = getVal(colMap.pus);
+              const wusVal = getVal(colMap.wus);
+              const kbVal = getVal(colMap.kb);
+              const bumilVal = getVal(colMap.bumil);
+              const bayiVal = getVal(colMap.bayi);
+              const balitaVal = getVal(colMap.balita);
+              const lansia6070 = getVal(colMap.lansia_6070);
+              const lansia70 = getVal(colMap.lansia_70);
+              const praLansia = getVal(colMap.pralansia);
+              const remajaVal = getVal(colMap.remaja);
+              const risti4T = getVal(colMap.risti4T);
+              const ristiALKI = getVal(colMap.ristiALKI);
+              const posbinduVal = getVal(colMap.posbindu);
 
               const isPUS = pusVal !== '' && pusVal !== '-' && pusVal !== '0';
               const isWUS = wusVal !== '' && wusVal !== '-' && wusVal !== '0';
               const isBumil = bumilVal !== '' && bumilVal !== '-' && bumilVal !== '0';
               const isBayi = bayiVal !== '' && bayiVal !== '-' && bayiVal !== '0';
-              const isBalita = (balitaVal !== '' && balitaVal !== '-' && balitaVal !== '0') || isBayi;
-              const isLansia = (lansia6070 !== '' && lansia6070 !== '-') || (lansia70 !== '' && lansia70 !== '-');
-              const isRemaja = remajaVal !== '' && remajaVal !== '-';
+              const isBalita = (balitaVal !== '' && balitaVal !== '-' && balitaVal !== '0') || isBayi || (usiaRaw.toLowerCase().includes('bulan'));
+              const isLansia = (lansia6070 !== '' && lansia6070 !== '-') || (lansia70 !== '' && lansia70 !== '-') || (parseInt(usiaRaw) >= 60);
+              const isRemaja = (remajaVal !== '' && remajaVal !== '-') || (parseInt(usiaRaw) >= 10 && parseInt(usiaRaw) <= 18);
               const is4T = risti4T !== '' && risti4T !== '-' && risti4T !== '0';
               const isALKI = ristiALKI !== '' && ristiALKI !== '-' && ristiALKI !== '0';
               const isPosbindu = posbinduVal !== '' && posbinduVal !== '-' && posbinduVal !== '0';
@@ -1477,7 +1619,7 @@
                 docId: docId,
                 desa_id: activeDesa,
                 desa_nama: namaDesaTarget,
-                rt: currentRT || rtFromSheet,
+                rt: String(currentRT),
                 no_kk: currentNoKK,
                 nik: nik,
                 nama: namaRaw,
@@ -1508,7 +1650,7 @@
             return;
           }
 
-          const konfirmasi = confirm(`Ditemukan ${batchData.length} data sasaran.\n\nData akan dialokasikan ke: ${namaDesaTarget}.\n\nLanjutkan sinkronisasi?`);
+          const konfirmasi = confirm(`Ditemukan ${batchData.length} data sasaran dari file Excel.\n\nData akan dialokasikan ke: ${namaDesaTarget}.\n\nLanjutkan sinkronisasi?`);
           if (!konfirmasi) {
             applyFilters();
             return;
@@ -1537,6 +1679,7 @@
           } else {
             allData = batchData.map(d => ({ id: d.docId, ...d }));
             updateDashboard();
+            updateRTFilterDropdown();
             applyFilters();
             alert(`Mode Demo: ${batchData.length} data berhasil dimuat.`);
           }
@@ -1552,16 +1695,17 @@
     }
 
     // ==========================================
-    // EKSPOR LAPORAN MULTI-SHEET (PER SHEET RT 1 - RT 11 & REKAP)
+    // 8. EKSPOR LAPORAN MULTI-SHEET
     // ==========================================
     function exportToExcel() {
       const isLogin = !!currentUser;
-      const namaDesa = activeDesa === 'ALL' ? 'Semua_Puskesmas' : activeDesa;
+      const isGlobal = (activeDesa === 'ALL');
+      const namaDesa = isGlobal ? 'Semua_Puskesmas' : activeDesa;
 
-      const dataset = allData.filter(p => {
-        if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
-        return true;
-      });
+      let dataset = allData;
+      if (!isGlobal) {
+        dataset = allData.filter(p => getDesaClean(p) === activeDesa);
+      }
 
       if (dataset.length === 0) {
         alert("Tidak ada data untuk diekspor pada wilayah yang dipilih.");
@@ -1570,13 +1714,13 @@
 
       const wb = XLSX.utils.book_new();
 
-      // 1. TAMBAHKAN SHEET UTAMA: REKAP MATRIKS DATA DESA
-      const { rtList, metrics } = calculateMatriksData();
+      // 1. Sheet Rekap
+      const { columns, metrics } = calculateMatriksData();
       const rekapRows = Object.keys(metrics).map(k => {
         const item = metrics[k];
         const rowObj = { "Indikator / Kategori Sasaran": item.label };
-        rtList.forEach(rt => {
-          rowObj[`RT ${rt}`] = item.rts[rt];
+        columns.forEach(c => {
+          rowObj[c.label] = item.cols[c.key];
         });
         rowObj["TOTAL"] = item.total;
         return rowObj;
@@ -1584,39 +1728,71 @@
       const wsRekap = XLSX.utils.json_to_sheet(rekapRows);
       XLSX.utils.book_append_sheet(wb, wsRekap, "REKAP DATA 2026");
 
-      // 2. TAMBAHKAN SHEET PER RT (RT 1 s/d RT 11)
-      rtList.forEach(rtNomor => {
-        const wargaRT = dataset.filter(p => String(p.rt).trim() === String(rtNomor));
+      // 2. Sheet per Sub-Wilayah (Per RT jika 1 desa, atau per Desa jika global)
+      if (!isGlobal) {
+        const uniqueRTs = [...new Set(dataset.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
+        uniqueRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
 
-        if (wargaRT.length > 0) {
-          const rowsRT = wargaRT.map((d, idx) => ({
-            "NO": idx + 1,
-            "RT/RW/DUSUN": d.rt,
-            "WILAYAH DESA": getDesaNama(getDesaClean(d)),
-            "NO KK": isLogin ? d.no_kk : maskSensitive(d.no_kk),
-            "NIK": isLogin ? d.nik : maskSensitive(d.nik),
-            "NAMA ANGGOTA": d.nama,
-            "JENIS KELAMIN": d.jk,
-            "HUBUNGAN": d.hubungan,
-            "TEMPAT / TGL LAHIR": d.ttl,
-            "USIA/th/BLN": d.usia_text || d.usia,
-            "PEKERJAAN": d.pekerjaan,
-            "PUS": d.isPUS ? 1 : "",
-            "WUS": d.isWUS ? 1 : "",
-            "KB": d.kb || "",
-            "IBU HAMIL": d.isBumil ? 1 : "",
-            "BAYI / BALITA": d.isBalita ? 1 : "",
-            "REMAJA": d.isRemaja ? 1 : "",
-            "POSBINDU (15-59)": d.isPosbindu ? 1 : "",
-            "LANSIA": d.isLansia ? 1 : "",
-            "4T": isLogin ? (d.is4T ? 1 : "") : "Terkunci",
-            "ALKI": isLogin ? (d.isALKI ? 1 : "") : "Terkunci"
-          }));
-
-          const wsRT = XLSX.utils.json_to_sheet(rowsRT);
-          XLSX.utils.book_append_sheet(wb, wsRT, `RT ${rtNomor}`);
-        }
-      });
+        uniqueRTs.forEach(rtNomor => {
+          const wargaRT = dataset.filter(p => String(p.rt).trim() === String(rtNomor));
+          if (wargaRT.length > 0) {
+            const rowsRT = wargaRT.map((d, idx) => ({
+              "NO": idx + 1,
+              "RT/RW/DUSUN": d.rt,
+              "WILAYAH DESA": getDesaNama(getDesaClean(d)),
+              "NO KK": isLogin ? d.no_kk : maskSensitive(d.no_kk),
+              "NIK": isLogin ? d.nik : maskSensitive(d.nik),
+              "NAMA ANGGOTA": d.nama,
+              "JENIS KELAMIN": d.jk,
+              "HUBUNGAN": d.hubungan,
+              "TEMPAT / TGL LAHIR": d.ttl,
+              "USIA/th/BLN": d.usia_text || d.usia,
+              "PEKERJAAN": d.pekerjaan,
+              "PUS": d.isPUS ? 1 : "",
+              "WUS": d.isWUS ? 1 : "",
+              "KB": d.kb || "",
+              "IBU HAMIL": d.isBumil ? 1 : "",
+              "BAYI / BALITA": d.isBalita ? 1 : "",
+              "REMAJA": d.isRemaja ? 1 : "",
+              "POSBINDU (15-59)": d.isPosbindu ? 1 : "",
+              "LANSIA": d.isLansia ? 1 : "",
+              "4T": isLogin ? (d.is4T ? 1 : "") : "Terkunci",
+              "ALKI": isLogin ? (d.isALKI ? 1 : "") : "Terkunci"
+            }));
+            const wsRT = XLSX.utils.json_to_sheet(rowsRT);
+            XLSX.utils.book_append_sheet(wb, wsRT, `RT ${rtNomor}`);
+          }
+        });
+      } else {
+        masterDesaList.forEach(d => {
+          const wargaDesa = dataset.filter(p => getDesaClean(p) === d.id);
+          if (wargaDesa.length > 0) {
+            const rowsDesa = wargaDesa.map((p, idx) => ({
+              "NO": idx + 1,
+              "WILAYAH DESA": d.nama,
+              "RT": p.rt,
+              "NO KK": isLogin ? p.no_kk : maskSensitive(p.no_kk),
+              "NIK": isLogin ? p.nik : maskSensitive(p.nik),
+              "NAMA": p.nama,
+              "JK": p.jk,
+              "HUBUNGAN": p.hubungan,
+              "TTL": p.ttl,
+              "USIA": p.usia_text || p.usia,
+              "PEKERJAAN": p.pekerjaan,
+              "PUS": p.isPUS ? 1 : "",
+              "WUS": p.isWUS ? 1 : "",
+              "KB": p.kb || "",
+              "IBU HAMIL": p.isBumil ? 1 : "",
+              "BAYI / BALITA": p.isBalita ? 1 : "",
+              "4T": isLogin ? (p.is4T ? 1 : "") : "Terkunci",
+              "ALKI": isLogin ? (p.isALKI ? 1 : "") : "Terkunci"
+            }));
+            const wsDesa = XLSX.utils.json_to_sheet(rowsDesa);
+            const sheetLabel = d.nama.replace('Desa ', '').substring(0, 28);
+            XLSX.utils.book_append_sheet(wb, wsDesa, sheetLabel);
+          }
+        });
+      }
 
       const fileName = `DATA_PENDUDUK_${namaDesa}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       XLSX.writeFile(wb, fileName);
