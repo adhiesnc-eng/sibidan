@@ -226,7 +226,7 @@
 
         <div class="sm:col-span-3">
           <button onclick="exportToExcel()" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-sm border border-slate-300 transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-download text-teal-700"></i> Ekspor Laporan
+            <i class="fa-solid fa-download text-teal-700"></i> Ekspor Laporan Excel
           </button>
         </div>
       </div>
@@ -564,7 +564,7 @@
 
   <script>
     // ==========================================
-    // 0. VERSI APLIKASI & AUTO-UPDATE
+    // 0. VERSI APLIKASI LOKAL & AUTO-UPDATE ENGINE
     // ==========================================
     const APP_VERSION = "v1.2.0";
 
@@ -794,7 +794,6 @@
     }
 
     function calculateMatriksData() {
-      // Filter dataset sesuai wilayah desa yang aktif
       const targetData = allData.filter(p => {
         if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
         return true;
@@ -829,12 +828,10 @@
         risti_alki: { label: "Risiko ALKI", rts: {}, total: 0, isDanger: true }
       };
 
-      // Inisialisasi angka 0 per RT
       Object.keys(metrics).forEach(k => {
         rtList.forEach(rt => { metrics[k].rts[rt] = 0; });
       });
 
-      // Lacak No KK unik per RT
       const kkSets = {};
       rtList.forEach(rt => { kkSets[rt] = new Set(); });
 
@@ -842,7 +839,6 @@
         const rt = String(p.rt).trim();
         if (!rtList.includes(rt)) return;
 
-        // KK Unik
         if (p.no_kk && p.no_kk.length > 5) {
           kkSets[rt].add(p.no_kk);
         }
@@ -850,12 +846,10 @@
         const usiaNum = parseInt(p.usia) || 0;
         const isBulan = p.usia_text && p.usia_text.toLowerCase().includes('bulan');
 
-        // Penduduk
         if (p.jk === 'L') metrics.jiwa_l.rts[rt]++;
         if (p.jk === 'P') metrics.jiwa_p.rts[rt]++;
         metrics.jiwa_total.rts[rt]++;
 
-        // KIA & BKKBN
         if (p.isPUS) metrics.pus.rts[rt]++;
         if (p.isWUS) metrics.wus.rts[rt]++;
         if (p.isBumil) metrics.bumil.rts[rt]++;
@@ -872,7 +866,6 @@
         if (usiaNum > 60 && usiaNum <= 70) metrics.lansia_6070.rts[rt]++;
         if (usiaNum > 70) metrics.lansia_70.rts[rt]++;
 
-        // Metode KB
         const kbClean = (p.kb || '').toUpperCase();
         if (kbClean.includes('SUNTIK')) { metrics.kb_suntik.rts[rt]++; metrics.kb_total.rts[rt]++; }
         else if (kbClean.includes('PIL')) { metrics.kb_pil.rts[rt]++; metrics.kb_total.rts[rt]++; }
@@ -883,12 +876,10 @@
         else if (kbClean.includes('KONDOM')) { metrics.kb_kondom.rts[rt]++; metrics.kb_total.rts[rt]++; }
         else if (kbClean !== '' && kbClean !== '-') { metrics.kb_total.rts[rt]++; }
 
-        // Risiko Tinggi
         if (p.is4T) metrics.risti_4t.rts[rt]++;
         if (p.isALKI) metrics.risti_alki.rts[rt]++;
       });
 
-      // Hitung Total KK & Total Horizontal
       rtList.forEach(rt => {
         metrics.kk.rts[rt] = kkSets[rt].size;
       });
@@ -1371,7 +1362,7 @@
     }
 
     // ==========================================
-    // 6. IMPORT & EKSPOR EXCEL
+    // 6. IMPORT & EKSPOR EXCEL (MULTI-SHEET PER RT)
     // ==========================================
     function triggerExcelUpload() {
       if (activeDesa === 'ALL') {
@@ -1560,49 +1551,75 @@
       reader.readAsArrayBuffer(file);
     }
 
+    // ==========================================
+    // EKSPOR LAPORAN MULTI-SHEET (PER SHEET RT 1 - RT 11 & REKAP)
+    // ==========================================
     function exportToExcel() {
-      const keyword = document.getElementById('searchInput').value.toLowerCase();
-      const rtFilter = document.getElementById('filterRT').value;
       const isLogin = !!currentUser;
+      const namaDesa = activeDesa === 'ALL' ? 'Semua_Puskesmas' : activeDesa;
 
-      const filtered = allData.filter(p => {
+      const dataset = allData.filter(p => {
         if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
-
-        const matchSearch = (
-          (p.nama && p.nama.toLowerCase().includes(keyword)) ||
-          (p.nik && p.nik.toLowerCase().includes(keyword)) ||
-          (p.no_kk && p.no_kk.toLowerCase().includes(keyword))
-        );
-        const matchRT = rtFilter === "" || String(p.rt) === String(rtFilter);
-        return matchSearch && matchRT;
+        return true;
       });
 
-      const exportRows = filtered.map((d, idx) => ({
-        "No": idx + 1,
-        "Wilayah Desa": getDesaNama(getDesaClean(d)),
-        "RT": d.rt,
-        "No KK": isLogin ? d.no_kk : maskSensitive(d.no_kk),
-        "NIK": isLogin ? d.nik : maskSensitive(d.nik),
-        "Nama": d.nama,
-        "JK": d.jk,
-        "Hubungan": d.hubungan,
-        "TTL": d.ttl,
-        "Usia": d.usia_text || d.usia,
-        "Pekerjaan": d.pekerjaan,
-        "PUS": d.isPUS ? "Ya" : "-",
-        "WUS": d.isWUS ? "Ya" : "-",
-        "Metode KB": d.kb || "-",
-        "Ibu Hamil": d.isBumil ? "Ya" : "-",
-        "Balita": d.isBalita ? "Ya" : "-",
-        "4T": isLogin ? (d.is4T ? "Ya" : "-") : "Terkunci",
-        "ALKI": isLogin ? (d.isALKI ? "Ya" : "-") : "Terkunci"
-      }));
+      if (dataset.length === 0) {
+        alert("Tidak ada data untuk diekspor pada wilayah yang dipilih.");
+        return;
+      }
 
-      const ws = XLSX.utils.json_to_sheet(exportRows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Sasaran Bidan");
-      const labelFile = activeDesa === 'ALL' ? 'Seluruh_Puskesmas' : activeDesa;
-      XLSX.writeFile(wb, `Laporan_Sasaran_${labelFile}_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+      // 1. TAMBAHKAN SHEET UTAMA: REKAP MATRIKS DATA DESA
+      const { rtList, metrics } = calculateMatriksData();
+      const rekapRows = Object.keys(metrics).map(k => {
+        const item = metrics[k];
+        const rowObj = { "Indikator / Kategori Sasaran": item.label };
+        rtList.forEach(rt => {
+          rowObj[`RT ${rt}`] = item.rts[rt];
+        });
+        rowObj["TOTAL"] = item.total;
+        return rowObj;
+      });
+      const wsRekap = XLSX.utils.json_to_sheet(rekapRows);
+      XLSX.utils.book_append_sheet(wb, wsRekap, "REKAP DATA 2026");
+
+      // 2. TAMBAHKAN SHEET PER RT (RT 1 s/d RT 11)
+      rtList.forEach(rtNomor => {
+        const wargaRT = dataset.filter(p => String(p.rt).trim() === String(rtNomor));
+
+        if (wargaRT.length > 0) {
+          const rowsRT = wargaRT.map((d, idx) => ({
+            "NO": idx + 1,
+            "RT/RW/DUSUN": d.rt,
+            "WILAYAH DESA": getDesaNama(getDesaClean(d)),
+            "NO KK": isLogin ? d.no_kk : maskSensitive(d.no_kk),
+            "NIK": isLogin ? d.nik : maskSensitive(d.nik),
+            "NAMA ANGGOTA": d.nama,
+            "JENIS KELAMIN": d.jk,
+            "HUBUNGAN": d.hubungan,
+            "TEMPAT / TGL LAHIR": d.ttl,
+            "USIA/th/BLN": d.usia_text || d.usia,
+            "PEKERJAAN": d.pekerjaan,
+            "PUS": d.isPUS ? 1 : "",
+            "WUS": d.isWUS ? 1 : "",
+            "KB": d.kb || "",
+            "IBU HAMIL": d.isBumil ? 1 : "",
+            "BAYI / BALITA": d.isBalita ? 1 : "",
+            "REMAJA": d.isRemaja ? 1 : "",
+            "POSBINDU (15-59)": d.isPosbindu ? 1 : "",
+            "LANSIA": d.isLansia ? 1 : "",
+            "4T": isLogin ? (d.is4T ? 1 : "") : "Terkunci",
+            "ALKI": isLogin ? (d.isALKI ? 1 : "") : "Terkunci"
+          }));
+
+          const wsRT = XLSX.utils.json_to_sheet(rowsRT);
+          XLSX.utils.book_append_sheet(wb, wsRT, `RT ${rtNomor}`);
+        }
+      });
+
+      const fileName = `DATA_PENDUDUK_${namaDesa}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
     }
   </script>
 </body>
