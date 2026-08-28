@@ -5,10 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SiBidan Terpadu - UPTD Puskesmas Sampanahan</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- SheetJS (xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+  <!-- Firebase SDK (v9 Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -33,6 +37,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
+  <!-- BANNER AUTO-UPDATE -->
   <div id="updateBanner" class="hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600 text-white shadow-lg sticky top-0 z-50 animate-slide-down border-b border-white/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
       <div class="flex items-center gap-2">
@@ -50,9 +55,11 @@
     </div>
   </div>
 
+  <!-- TOP NAVBAR -->
   <header class="bg-teal-700 text-white shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-3">
       
+      <!-- Brand & Versi -->
       <div class="flex items-center space-x-3">
         <div class="bg-white/10 p-2 rounded-xl backdrop-blur-sm">
           <i class="fa-solid fa-hospital text-2xl text-rose-300"></i>
@@ -66,11 +73,14 @@
         </div>
       </div>
       
+      <!-- Action Buttons & Auth -->
       <div class="flex items-center gap-2">
+        <!-- Tombol Matriks Rekapitulasi Sasaran -->
         <button onclick="openModalMatriks()" class="bg-teal-600/90 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm border border-teal-400/40">
           <i class="fa-solid fa-table-cells text-amber-300"></i> <span>Matriks Rekap Sasaran</span>
         </button>
 
+        <!-- Menu Khusus Petugas/Bidan (Admin) -->
         <div id="adminActions" class="hidden flex items-center gap-2">
           <button onclick="openModalDesa()" class="bg-teal-800 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm border border-teal-500">
             <i class="fa-solid fa-gears"></i> <span class="hidden md:inline">Kelola Desa & Sistem</span>
@@ -87,6 +97,7 @@
           <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
         </div>
 
+        <!-- Tombol Login / Logout -->
         <div id="authContainer">
           <button id="btnLoginModal" onclick="openLoginModal()" class="bg-white text-teal-800 hover:bg-teal-50 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm">
             <i class="fa-solid fa-right-to-bracket"></i> Login Bidan / Admin
@@ -106,8 +117,10 @@
     </div>
   </header>
 
+  <!-- MAIN CONTAINER -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
 
+    <!-- WILAYAH KERJA & STATUS SELECTOR -->
     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
       <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -129,6 +142,7 @@
       </div>
     </div>
 
+    <!-- REKAP KARTU SASARAN PWS KIA / KB / POSYANDU -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
         <div class="text-slate-500 text-xs font-medium flex items-center justify-between">
@@ -179,6 +193,7 @@
       </div>
     </div>
 
+    <!-- FILTER & TABS SECTION -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
       <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         <button onclick="setTab('semua')" id="tab-semua" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white transition">
@@ -224,7 +239,24 @@
       </div>
     </div>
 
+    <!-- TABEL DATA SASARAN DENGAN PAGINASI -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      
+      <!-- Header Tabel & Pengaturan Jumlah Baris -->
+      <div class="px-4 py-3 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2 text-slate-600 font-medium">
+          <span>Tampilkan</span>
+          <select id="pageSizeSelect" onchange="changePageSize(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span>data per halaman</span>
+        </div>
+        <div id="paginationSummaryTop" class="text-slate-500 font-medium">Menampilkan 0 data</div>
+      </div>
+
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">
           <thead class="bg-slate-100 text-slate-700 text-xs uppercase font-bold tracking-wider border-b border-slate-200">
@@ -249,20 +281,27 @@
         </table>
       </div>
 
-      <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-2">
-        <span id="recordCount">Menampilkan 0 data</span>
-        <div class="flex items-center gap-3">
-          <span id="footerDesaLabel">Wilayah: Desa Sampanahan Hilir</span>
+      <!-- KONTROL PAGINASI & FOOTER -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-600 gap-3">
+        <div class="flex items-center gap-2">
+          <span id="recordCount">Menampilkan 0 data</span>
           <span class="text-slate-300">&bull;</span>
-          <span id="footerVersionText" class="font-mono text-slate-400">SiBidan v1.2.0</span>
+          <span id="footerDesaLabel">Wilayah: Desa Sampanahan Hilir</span>
+        </div>
+
+        <!-- Tombol Halaman (Pagination Buttons) -->
+        <div class="flex items-center gap-1.5" id="paginationControls">
+          <!-- Tombol digenerate via Javascript -->
         </div>
       </div>
     </div>
   </main>
 
+  <!-- MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN -->
   <div id="modalMatriks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4">
     <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-7xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
       
+      <!-- Header Modal -->
       <div class="p-4 sm:p-5 bg-white border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 no-print">
         <div>
           <h3 class="font-extrabold text-base sm:text-lg text-slate-800 tracking-tight" id="matriksModalTitle">DATA PENDUDUK DESA SAMPANAHAN HILIR</h3>
@@ -281,15 +320,19 @@
         </div>
       </div>
 
+      <!-- KONTEN TABEL MATRIKS -->
       <div class="p-3 sm:p-5 overflow-y-auto overflow-x-auto flex-1">
         <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm bg-white">
           <table class="w-full text-xs text-center border-collapse">
             <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b-2 border-slate-300" id="matriksTableHead">
-              </thead>
+              <!-- Header bertingkat dirender otomatis -->
+            </thead>
             <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700 text-xs">
-              </tbody>
+              <!-- Baris data RT 1..9 dirender otomatis -->
+            </tbody>
             <tfoot id="matriksTableFoot" class="bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300 text-xs">
-              </tfoot>
+              <!-- Baris Jumlah Total -->
+            </tfoot>
           </table>
         </div>
       </div>
@@ -301,6 +344,7 @@
     </div>
   </div>
 
+  <!-- MODAL LOGIN FIREBASE AUTH -->
   <div id="modalLogin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
@@ -335,6 +379,7 @@
     </div>
   </div>
 
+  <!-- MODAL KELOLA DESA & SISTEM VERSI -->
   <div id="modalKelolaDesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
@@ -348,6 +393,7 @@
       </div>
 
       <div class="p-6 space-y-6 overflow-y-auto flex-1">
+        <!-- Kontrol Auto-Update Versi -->
         <div class="p-4 bg-teal-50/70 border border-teal-200 rounded-xl space-y-3">
           <div class="flex items-center justify-between">
             <h4 class="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -365,7 +411,7 @@
               </div>
               <div class="sm:col-span-2">
                 <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-0.5">Catatan Perubahan (Changelog)</label>
-                <input type="text" id="inputVersionChangelog" placeholder="Penambahan matriks rekap desa dinamis & PWS" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                <input type="text" id="inputVersionChangelog" placeholder="Penambahan paginasi cepat dan matriks dinamis" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
               </div>
             </div>
             <div class="flex justify-end pt-1">
@@ -376,6 +422,7 @@
           </form>
         </div>
 
+        <!-- Master Desa -->
         <div class="space-y-3">
           <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-map-location-dot text-teal-600"></i> Daftar Desa Binaan Puskesmas
@@ -397,7 +444,8 @@
                 </tr>
               </thead>
               <tbody id="listMasterDesaBody" class="divide-y divide-slate-200">
-                </tbody>
+                <!-- Render list desa -->
+              </tbody>
             </table>
           </div>
         </div>
@@ -409,6 +457,7 @@
     </div>
   </div>
 
+  <!-- MODAL FORM SASARAN (DENGAN TEMPAT & TANGGAL LAHIR TERPISAH) -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center rounded-t-2xl">
@@ -427,7 +476,8 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Wilayah Desa</label>
             <select id="formDesa" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white font-medium">
-              </select>
+              <!-- Render opsi desa -->
+            </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RT/RW</label>
@@ -476,6 +526,7 @@
           </div>
         </div>
 
+        <!-- Kolom Tempat dan Tanggal Lahir Dipisah -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tempat Lahir</label>
@@ -491,6 +542,7 @@
           </div>
         </div>
 
+        <!-- Status Sasaran KIA / KB -->
         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
           <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider">Status Sasaran KIA & BKKBN</h4>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -537,6 +589,7 @@
     </div>
   </div>
 
+  <!-- SCRIPT LOGIC & FIREBASE DENGAN PAGINASI -->
   <script>
     // ==========================================
     // 0. AUTO-DETEKSI NIK UNTUK USIA, JK & STATUS
@@ -675,8 +728,6 @@
       document.getElementById('modalLocalVer').innerText = ver;
     }
 
-    updateVersionLabels(localAppVersion);
-
     // ==========================================
     // 2. KONFIGURASI FIREBASE PROJECT
     // ==========================================
@@ -696,6 +747,11 @@
     let masterDesaList = [];
     let currentTab = 'semua';
     let activeDesa = 'ALL';
+
+    // State Paginasi
+    let currentPage = 1;
+    let pageSize = 25;
+    let filteredDataSet = [];
 
     const defaultDesaData = [
       { id: 'SAMPANAHAN_HILIR', nama: 'Desa Sampanahan Hilir' },
@@ -1359,6 +1415,7 @@
       const footerLabel = document.getElementById('footerDesaLabel');
       const d = masterDesaList.find(x => x.id === activeDesa);
       footerLabel.innerText = activeDesa === 'ALL' ? "Wilayah: Seluruh Wilayah Puskesmas" : `Wilayah: ${d ? d.nama : activeDesa}`;
+      currentPage = 1;
       updateDashboard();
       updateRTFilterDropdown();
       applyFilters();
@@ -1426,7 +1483,7 @@
     }
 
     // ==========================================
-    // 6. DASHBOARD & FILTERING (LANSIA STERIL DARI BALITA)
+    // 6. DASHBOARD & FILTERING DENGAN PAGINASI CEPAT
     // ==========================================
     function updateDashboard() {
       const filteredByDesa = allData.filter(p => {
@@ -1458,6 +1515,7 @@
 
     function setTab(tab) {
       currentTab = tab;
+      currentPage = 1;
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('bg-teal-700', 'text-white');
         btn.classList.add('bg-slate-100', 'text-slate-600');
@@ -1470,11 +1528,22 @@
       applyFilters();
     }
 
+    function changePageSize(size) {
+      pageSize = parseInt(size) || 25;
+      currentPage = 1;
+      renderTableWithPagination();
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderTableWithPagination();
+    }
+
     function applyFilters() {
       const keyword = document.getElementById('searchInput').value.toLowerCase();
       const rtFilter = document.getElementById('filterRT').value;
 
-      const filtered = allData.filter(p => {
+      filteredDataSet = allData.filter(p => {
         if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
 
         const matchSearch = (
@@ -1502,29 +1571,44 @@
         } else if (currentTab === 'posbindu') {
           matchTab = p.isPosbindu || (!isBulan && usiaNum >= 15 && usiaNum <= 59);
         } else if (currentTab === 'lansia') {
-          // STERILKAN: Lansia hanya tampil jika bukan bulan & usia >= 60
           matchTab = !isBulan && (p.isLansia || usiaNum >= 60);
         }
 
         return matchSearch && matchRT && matchTab;
       });
 
-      renderTable(filtered);
+      currentPage = 1;
+      renderTableWithPagination();
     }
 
-    function renderTable(data) {
+    function renderTableWithPagination() {
       const tbody = document.getElementById('dataTableBody');
       const counter = document.getElementById('recordCount');
-      counter.innerText = `Menampilkan ${data.length} data`;
+      const topSummary = document.getElementById('paginationSummaryTop');
+      const paginationControls = document.getElementById('paginationControls');
 
-      if (data.length === 0) {
+      const totalRecords = filteredDataSet.length;
+      const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, totalRecords);
+      const pageData = filteredDataSet.slice(startIndex, endIndex);
+
+      counter.innerText = `Menampilkan ${totalRecords === 0 ? 0 : (startIndex + 1)} - ${endIndex} dari total ${totalRecords} data`;
+      topSummary.innerText = `Halaman ${currentPage} dari ${totalPages} (${totalRecords} sasaran)`;
+
+      if (totalRecords === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Tidak ada data sasaran di wilayah ini.</td></tr>`;
+        paginationControls.innerHTML = '';
         return;
       }
 
       const isLogin = !!currentUser;
 
-      tbody.innerHTML = data.map((item, index) => {
+      tbody.innerHTML = pageData.map((item, index) => {
         let badges = [];
         if (item.isBumil) badges.push('<span class="bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded text-[11px] font-bold">Bumil</span>');
         if (item.isBalita || (item.usia_text && String(item.usia_text).toLowerCase().includes('bulan'))) badges.push('<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[11px] font-bold">Balita</span>');
@@ -1541,7 +1625,7 @@
 
         return `
           <tr class="hover:bg-slate-50 transition">
-            <td class="py-3 px-3 text-center text-slate-400">${index + 1}</td>
+            <td class="py-3 px-3 text-center text-slate-400">${startIndex + index + 1}</td>
             <td class="py-3 px-3">
               <div class="font-bold text-xs text-teal-800">${desaLabel}</div>
               <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-800 mt-0.5 mb-1">${item.rt ? (item.rt.startsWith('0') || item.rt.includes('/') ? 'RT/RW ' + item.rt : 'RT ' + item.rt) : '-'}</span>
@@ -1578,10 +1662,46 @@
           </tr>
         `;
       }).join('');
+
+      // Render Pagination Buttons
+      let paginationHTML = `
+        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded border border-slate-300 bg-white font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+      `;
+
+      let startP = Math.max(1, currentPage - 2);
+      let endP = Math.min(totalPages, currentPage + 2);
+
+      if (startP > 1) {
+        paginationHTML += `<button onclick="goToPage(1)" class="px-3 py-1 rounded border border-slate-300 bg-white hover:bg-slate-100 font-semibold">1</button>`;
+        if (startP > 2) paginationHTML += `<span class="px-1 text-slate-400">...</span>`;
+      }
+
+      for (let p = startP; p <= endP; p++) {
+        paginationHTML += `
+          <button onclick="goToPage(${p})" class="px-3 py-1 rounded font-semibold border ${p === currentPage ? 'bg-teal-700 text-white border-teal-700 shadow-sm' : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-700'}">
+            ${p}
+          </button>
+        `;
+      }
+
+      if (endP < totalPages) {
+        if (endP < totalPages - 1) paginationHTML += `<span class="px-1 text-slate-400">...</span>`;
+        paginationHTML += `<button onclick="goToPage(${totalPages})" class="px-3 py-1 rounded border border-slate-300 bg-white hover:bg-slate-100 font-semibold">${totalPages}</button>`;
+      }
+
+      paginationHTML += `
+        <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1.5 rounded border border-slate-300 bg-white font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      `;
+
+      paginationControls.innerHTML = paginationHTML;
     }
 
     // ==========================================
-    // 7. CRUD DATA SASARAN DENGAN TEMPAT/TGL LAHIR TERPISAH
+    // 7. CRUD DATA SASARAN
     // ==========================================
     function openModalTambah() {
       if (!currentUser) return alert("Hanya petugas yang berhak menambah sasaran.");
@@ -1617,7 +1737,6 @@
       document.getElementById('formPekerjaan').value = item.pekerjaan || '';
       document.getElementById('formKB').value = item.kb || '';
 
-      // Pisahkan data tempat dan tanggal lahir bila ada
       let tempat = item.tempat_lahir || '';
       let tglIso = item.tgl_lahir_iso || '';
 
@@ -1659,7 +1778,7 @@
       const rtClean = document.getElementById('formRT').value.trim();
       
       const tempatLahirVal = document.getElementById('formTempatLahir').value.trim();
-      const tglLahirVal = document.getElementById('formTglLahir').value; // format YYYY-MM-DD
+      const tglLahirVal = document.getElementById('formTglLahir').value;
 
       let formattedTgl = '';
       if (tglLahirVal) {
@@ -2161,6 +2280,9 @@
       const fileName = `DATA_PENDUDUK_${namaDesa}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
+
+    // Inisialisasi awal
+    updateVersionLabels(localAppVersion);
   </script>
 </body>
 </html>
