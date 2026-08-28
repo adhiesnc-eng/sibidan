@@ -5,10 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SiBidan Terpadu - UPTD Puskesmas Sampanahan</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- SheetJS (xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+  <!-- Firebase SDK (v9 Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -33,6 +37,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
+  <!-- BANNER AUTO-UPDATE (MUNCUL OTOMATIS JIKA ADA VERSI BARU DARI PUSKESMAS) -->
   <div id="updateBanner" class="hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600 text-white shadow-lg sticky top-0 z-50 animate-slide-down border-b border-white/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
       <div class="flex items-center gap-2">
@@ -40,7 +45,7 @@
         <span class="font-medium">Pembaruan Tersedia: <strong id="newVersionText">v1.2.1</strong> &bull; <span id="newVersionDesc" class="opacity-90">Peningkatan sistem dan perbaikan fitur</span></span>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="applyAppUpdate()" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-3 py-1 rounded-md shadow-sm transition flex items-center gap-1.5 text-xs">
+        <button id="btnApplyUpdate" onclick="applyAppUpdate()" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-3 py-1 rounded-md shadow-sm transition flex items-center gap-1.5 text-xs">
           <i class="fa-solid fa-cloud-arrow-down"></i> Perbarui Sekarang
         </button>
         <button onclick="dismissUpdateBanner()" class="text-white/80 hover:text-white p-1" title="Tutup">
@@ -50,9 +55,11 @@
     </div>
   </div>
 
+  <!-- TOP NAVBAR -->
   <header class="bg-teal-700 text-white shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-3">
       
+      <!-- Brand & Versi -->
       <div class="flex items-center space-x-3">
         <div class="bg-white/10 p-2 rounded-xl backdrop-blur-sm">
           <i class="fa-solid fa-hospital text-2xl text-rose-300"></i>
@@ -66,11 +73,14 @@
         </div>
       </div>
       
+      <!-- Action Buttons & Auth -->
       <div class="flex items-center gap-2">
+        <!-- Tombol Matriks Rekap Desa -->
         <button onclick="openModalMatriks()" class="bg-teal-600/80 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm border border-teal-400/40">
           <i class="fa-solid fa-table-cells-large text-amber-300"></i> <span>Matriks Rekap Desa</span>
         </button>
 
+        <!-- Menu Khusus Petugas/Bidan (Admin) -->
         <div id="adminActions" class="hidden flex items-center gap-2">
           <button onclick="openModalDesa()" class="bg-teal-800 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm border border-teal-500">
             <i class="fa-solid fa-gears"></i> <span class="hidden md:inline">Kelola Desa & Sistem</span>
@@ -87,6 +97,7 @@
           <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
         </div>
 
+        <!-- Tombol Login / Logout -->
         <div id="authContainer">
           <button id="btnLoginModal" onclick="openLoginModal()" class="bg-white text-teal-800 hover:bg-teal-50 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm">
             <i class="fa-solid fa-right-to-bracket"></i> Login Bidan / Admin
@@ -106,8 +117,10 @@
     </div>
   </header>
 
+  <!-- MAIN CONTAINER -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
 
+    <!-- WILAYAH KERJA & STATUS SELECTOR -->
     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
       <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
         <label class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -129,6 +142,7 @@
       </div>
     </div>
 
+    <!-- REKAP KARTU SASARAN PWS KIA / KB / POSYANDU -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
         <div class="text-slate-500 text-xs font-medium flex items-center justify-between">
@@ -179,6 +193,7 @@
       </div>
     </div>
 
+    <!-- FILTER & TABS SECTION -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
       <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         <button onclick="setTab('semua')" id="tab-semua" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-teal-700 text-white transition">
@@ -224,6 +239,7 @@
       </div>
     </div>
 
+    <!-- TABEL DATA SASARAN -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">
@@ -249,6 +265,7 @@
         </table>
       </div>
 
+      <!-- FOOTER -->
       <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-2">
         <span id="recordCount">Menampilkan 0 data</span>
         <div class="flex items-center gap-3">
@@ -260,6 +277,7 @@
     </div>
   </main>
 
+  <!-- MODAL MATRIKS REKAPAN DESA -->
   <div id="modalMatriks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4">
     <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-6xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
       <div class="p-4 sm:p-5 bg-teal-800 text-white flex justify-between items-center no-print">
@@ -285,13 +303,16 @@
         </div>
       </div>
 
+      <!-- KONTEN TABEL MATRIKS -->
       <div class="p-4 sm:p-6 overflow-y-auto overflow-x-auto flex-1 space-y-4">
         <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm">
           <table class="w-full text-xs text-center border-collapse">
             <thead class="bg-teal-900 text-white uppercase font-bold text-[11px] tracking-wider" id="matriksTableHead">
-              </thead>
+              <!-- Header dirender dinamis -->
+            </thead>
             <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700">
-              </tbody>
+              <!-- Matriks dirender secara realtime -->
+            </tbody>
           </table>
         </div>
       </div>
@@ -303,6 +324,7 @@
     </div>
   </div>
 
+  <!-- MODAL LOGIN FIREBASE AUTH -->
   <div id="modalLogin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
@@ -337,6 +359,7 @@
     </div>
   </div>
 
+  <!-- MODAL KELOLA DESA & SISTEM VERSI -->
   <div id="modalKelolaDesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
@@ -350,6 +373,7 @@
       </div>
 
       <div class="p-6 space-y-6 overflow-y-auto flex-1">
+        <!-- Kontrol Auto-Update Versi -->
         <div class="p-4 bg-teal-50/70 border border-teal-200 rounded-xl space-y-3">
           <div class="flex items-center justify-between">
             <h4 class="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -378,6 +402,7 @@
           </form>
         </div>
 
+        <!-- Master Desa -->
         <div class="space-y-3">
           <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-map-location-dot text-teal-600"></i> Daftar Desa Binaan Puskesmas
@@ -399,7 +424,8 @@
                 </tr>
               </thead>
               <tbody id="listMasterDesaBody" class="divide-y divide-slate-200">
-                </tbody>
+                <!-- Render list desa -->
+              </tbody>
             </table>
           </div>
         </div>
@@ -411,6 +437,7 @@
     </div>
   </div>
 
+  <!-- MODAL FORM SASARAN -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center rounded-t-2xl">
@@ -429,7 +456,8 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Wilayah Desa</label>
             <select id="formDesa" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white font-medium">
-              </select>
+              <!-- Render opsi desa -->
+            </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RT / Dusun</label>
@@ -493,6 +521,7 @@
           </div>
         </div>
 
+        <!-- Status Sasaran KIA / KB -->
         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
           <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider">Status Sasaran KIA & BKKBN</h4>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -536,15 +565,26 @@
     </div>
   </div>
 
+  <!-- SCRIPT LOGIC & FIREBASE -->
   <script>
     // ==========================================
-    // 0. VERSI APLIKASI LOKAL & AUTO-UPDATE ENGINE
+    // 0. SISTEM VERSI DINAMIS & AUTO-UPDATE ENGINE
     // ==========================================
-    const APP_VERSION = "v1.2.0";
+    const DEFAULT_APP_VERSION = "v1.2.0";
+    // Ambil versi lokal yang tersimpan di memori browser pengguna
+    let localAppVersion = localStorage.getItem('sibidan_app_version') || DEFAULT_APP_VERSION;
+    let pendingServerVersion = "";
 
-    document.getElementById('appVersionBadge').innerText = APP_VERSION;
-    document.getElementById('footerVersionText').innerText = `SiBidan ${APP_VERSION}`;
-    document.getElementById('modalLocalVer').innerText = APP_VERSION;
+    function updateVersionLabels(ver) {
+      localAppVersion = ver;
+      localStorage.setItem('sibidan_app_version', ver);
+      document.getElementById('appVersionBadge').innerText = ver;
+      document.getElementById('footerVersionText').innerText = `SiBidan ${ver}`;
+      document.getElementById('modalLocalVer').innerText = ver;
+    }
+
+    // Jalankan inisialisasi label versi
+    updateVersionLabels(localAppVersion);
 
     // ==========================================
     // 1. KONFIGURASI FIREBASE PROJECT ANDA
@@ -595,7 +635,7 @@
       db.collection("system_config").doc("app_info").onSnapshot((doc) => {
         if (!doc.exists) {
           db.collection("system_config").doc("app_info").set({
-            latestVersion: APP_VERSION,
+            latestVersion: localAppVersion,
             changelog: "Rilis stabil Sistem Informasi Bidan Desa Terpadu",
             updatedAt: new Date().toISOString()
           });
@@ -603,13 +643,15 @@
         }
 
         const data = doc.data();
-        const serverVersion = data.latestVersion;
+        const serverVersion = data.latestVersion ? data.latestVersion.trim() : localAppVersion;
         const changelog = data.changelog || "Pembaruan sistem dan perbaikan fitur";
 
-        document.getElementById('inputVersionCode').value = serverVersion || APP_VERSION;
+        document.getElementById('inputVersionCode').value = serverVersion;
         document.getElementById('inputVersionChangelog').value = changelog;
 
-        if (serverVersion && serverVersion.trim() !== APP_VERSION.trim()) {
+        // Bandingkan versi Firestore dengan versi di localStorage pengguna
+        if (serverVersion && serverVersion !== localAppVersion) {
+          pendingServerVersion = serverVersion;
           document.getElementById('newVersionText').innerText = serverVersion;
           document.getElementById('newVersionDesc').innerText = changelog;
           document.getElementById('updateBanner').classList.remove('hidden');
@@ -619,13 +661,32 @@
       });
     }
 
-    function applyAppUpdate() {
-      if ('caches' in window) {
-        caches.keys().then((names) => {
-          names.forEach((name) => caches.delete(name));
-        });
+    // FUNGSI EKSEKUSI UPDATE: Simpan versi baru, bersihkan cache, dan muat ulang otomatis
+    async function applyAppUpdate() {
+      const btn = document.getElementById('btnApplyUpdate');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memperbarui...';
+      btn.disabled = true;
+
+      // 1. Simpan nomor versi baru ke localStorage
+      if (pendingServerVersion) {
+        localStorage.setItem('sibidan_app_version', pendingServerVersion);
       }
-      window.location.reload(true);
+
+      // 2. Bersihkan seluruh cache browser
+      if ('caches' in window) {
+        try {
+          const names = await caches.keys();
+          for (let name of names) {
+            await caches.delete(name);
+          }
+        } catch (err) {
+          console.warn("Cache clean error:", err);
+        }
+      }
+
+      // 3. Muat ulang halaman dengan parameter anti-cache
+      const newUrl = window.location.origin + window.location.pathname + '?v=' + encodeURIComponent(pendingServerVersion || Date.now());
+      window.location.replace(newUrl);
     }
 
     function dismissUpdateBanner() {
@@ -642,6 +703,7 @@
       if (!newVer) return;
 
       if (!db) {
+        updateVersionLabels(newVer);
         alert(`Mode Demo: Versi diubah menjadi ${newVer}`);
         return;
       }
@@ -653,7 +715,10 @@
           updatedBy: currentUser.email,
           updatedAt: new Date().toISOString()
         });
-        alert(`Berhasil mempublikasikan ${newVer}. Seluruh pengguna akan menerima notifikasi update!`);
+        
+        // Admin sendiri langsung update versinya
+        updateVersionLabels(newVer);
+        alert(`Berhasil mempublikasikan ${newVer}. Seluruh pengguna yang sedang membuka aplikasi akan menerima notifikasi update!`);
       } catch (err) {
         alert("Gagal mempublikasikan versi: " + err.message);
       }
@@ -707,12 +772,10 @@
       updateRTFilterDropdown();
     }
 
-    // Perbarui dropdown filter RT di halaman utama sesuai desa aktif
     function updateRTFilterDropdown() {
       const filterRT = document.getElementById('filterRT');
       const curVal = filterRT.value;
 
-      // Kumpulkan RT unik yang ada di desa terpilih
       const targetData = allData.filter(p => (activeDesa === 'ALL') || (getDesaClean(p) === activeDesa));
       const uniqueRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
       uniqueRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
@@ -794,7 +857,6 @@
       document.getElementById('modalMatriks').classList.add('hidden');
     }
 
-    // Fungsi Kalkulasi Matriks Otomatis
     function calculateMatriksData() {
       const isGlobal = (activeDesa === 'ALL');
       let targetData = allData;
@@ -832,26 +894,21 @@
       let columns = [];
 
       if (isGlobal) {
-        // Mode Puskesmas Induk: Kolom adalah Seluruh Desa Binaan
         columns = masterDesaList.map(d => ({ key: d.id, label: d.nama.replace('Desa ', '') }));
       } else {
-        // Mode Per Desa: Kolom adalah RT yang ada di desa tersebut
         const foundRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
         foundRTs.sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
         
         if (foundRTs.length === 0) {
-          // Fallback jika belum ada data
           for (let i = 1; i <= 9; i++) foundRTs.push(String(i));
         }
         columns = foundRTs.map(rt => ({ key: rt, label: `RT ${rt}` }));
       }
 
-      // Inisialisasi angka 0 per kolom
       Object.keys(metrics).forEach(k => {
         columns.forEach(c => { metrics[k].cols[c.key] = 0; });
       });
 
-      // Lacak No KK unik per kolom
       const kkSets = {};
       columns.forEach(c => { kkSets[c.key] = new Set(); });
 
@@ -918,7 +975,6 @@
       const thead = document.getElementById('matriksTableHead');
       const tbody = document.getElementById('matriksTableBody');
 
-      // 1. Render Header Kolom Dinamis
       const subTitleCols = isGlobal ? 'Rincian Desa Binaan Puskesmas' : 'Rincian Wilayah Rukun Tetangga (RT)';
       thead.innerHTML = `
         <tr class="divide-x divide-teal-800">
@@ -931,7 +987,6 @@
         </tr>
       `;
 
-      // 2. Render Baris Data Matriks
       tbody.innerHTML = Object.keys(metrics).map(k => {
         const item = metrics[k];
         let rowClass = "hover:bg-teal-50/60 transition";
@@ -1675,7 +1730,7 @@
               statusEl.innerHTML = `<span class="text-teal-700 font-semibold"><i class="fa-solid fa-spinner fa-spin"></i> Sinkronisasi ${namaDesaTarget}... (${totalProcessed}/${batchData.length})</span>`;
             }
 
-            alert(`Sukses! ${batchData.length} data ${namaDesaTarget} berhasil tersimpan.`);
+            alert(`Sukses! ${batchData.length} data ${namaDesaTarget} berhasil tersimpan ke Firebase.`);
           } else {
             allData = batchData.map(d => ({ id: d.docId, ...d }));
             updateDashboard();
