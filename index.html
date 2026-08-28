@@ -277,7 +277,7 @@
     </div>
   </main>
 
-  <!-- MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN (SESUAI GAMBAR) -->
+  <!-- MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN -->
   <div id="modalMatriks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4">
     <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-7xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
       
@@ -300,7 +300,7 @@
         </div>
       </div>
 
-      <!-- KONTEN TABEL MATRIKS STANDAR GAMBAR -->
+      <!-- KONTEN TABEL MATRIKS -->
       <div class="p-3 sm:p-5 overflow-y-auto overflow-x-auto flex-1">
         <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm bg-white">
           <table class="w-full text-xs text-center border-collapse">
@@ -460,7 +460,6 @@
             </select>
           </div>
           <div>
-            <!-- INPUT MANUAL RT/RW -->
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RT/RW</label>
             <input type="text" id="formRT" required placeholder="Contoh: 001/001 atau 1" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-medium">
           </div>
@@ -472,7 +471,6 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <!-- INPUT NIK DENGAN LISTENER AUTO-DETEKSI -->
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1 flex items-center justify-between">
               <span>NIK (16 Digit)</span>
               <span id="nikDetectBadge" class="hidden text-[10px] text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded font-normal border border-teal-200">
@@ -918,7 +916,7 @@
     initAppVersionListener();
 
     // ==========================================
-    // 3. MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN (SESUAI GAMBAR)
+    // 3. MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN
     // ==========================================
     function openModalMatriks() {
       const isGlobal = (activeDesa === 'ALL');
@@ -933,7 +931,6 @@
       document.getElementById('modalMatriks').classList.add('hidden');
     }
 
-    // Fungsi Kalkulasi Matriks Baris per RT / Desa
     function calculateMatriksData() {
       const isGlobal = (activeDesa === 'ALL');
       let targetData = allData;
@@ -968,7 +965,6 @@
         }));
       }
 
-      // Inisialisasi Rekap per Baris
       const rowsData = rowGroups.map(group => {
         const items = targetData.filter(p => {
           return isGlobal ? (getDesaClean(p) === group.key) : (String(p.rt).trim() === group.key);
@@ -1040,7 +1036,6 @@
         };
       });
 
-      // Hitung Jumlah Total Baris Bawah
       const totalSummary = {
         pnddk_l: rowsData.reduce((acc, r) => acc + r.pnddk_l, 0),
         pnddk_p: rowsData.reduce((acc, r) => acc + r.pnddk_p, 0),
@@ -1073,7 +1068,6 @@
 
       const wilayahColTitle = isGlobal ? 'DESA' : 'DESA / RT';
 
-      // 1. Header Bertingkat Persis Gambar
       thead.innerHTML = `
         <tr class="divide-x divide-slate-200">
           <th rowspan="2" class="p-2 w-10">NO</th>
@@ -1103,7 +1097,6 @@
         </tr>
       `;
 
-      // 2. Body Baris RT / Desa
       tbody.innerHTML = rowsData.map(r => `
         <tr class="hover:bg-slate-50 transition divide-x divide-slate-200">
           <td class="p-2 text-slate-400 font-medium">${r.no}</td>
@@ -1129,7 +1122,6 @@
         </tr>
       `).join('');
 
-      // 3. Footer Baris Jumlah Total
       tfoot.innerHTML = `
         <tr class="divide-x divide-slate-300">
           <td colspan="2" class="p-2.5 text-center font-extrabold text-slate-900 uppercase">JUMLAH TOTAL</td>
@@ -1153,6 +1145,23 @@
           <td class="p-2 font-black text-slate-900 bg-slate-200/60">${totalSummary.remaja_total}</td>
         </tr>
       `;
+    }
+
+    // FUNGSI AUTO-FIT WIDTH UNTUK SHEET EXCEL
+    function autoFitColumns(worksheet, jsonData) {
+      if (!jsonData || jsonData.length === 0) return;
+      const keys = Object.keys(jsonData[0]);
+      const colWidths = keys.map(key => {
+        let maxLen = String(key).length;
+        jsonData.forEach(row => {
+          const valStr = row[key] ? String(row[key]) : '';
+          if (valStr.length > maxLen) {
+            maxLen = valStr.length;
+          }
+        });
+        return { wch: Math.max(maxLen + 3, 7) };
+      });
+      worksheet['!cols'] = colWidths;
     }
 
     function exportMatriksToExcel() {
@@ -1183,7 +1192,6 @@
         "TOTAL REMAJA": r.remaja_total
       }));
 
-      // Tambah baris JUMLAH TOTAL
       excelRows.push({
         "NO": "",
         "DESA / RT": "JUMLAH TOTAL",
@@ -1208,6 +1216,8 @@
       });
 
       const ws = XLSX.utils.json_to_sheet(excelRows);
+      autoFitColumns(ws, excelRows);
+      
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "REKAPAN TOTAL");
       XLSX.writeFile(wb, `REKAP_SASARAN_${namaDesa}_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -1934,7 +1944,7 @@
     }
 
     // ==========================================
-    // 9. EKSPOR LAPORAN MULTI-SHEET LENGKAP
+    // 9. EKSPOR LAPORAN MULTI-SHEET LENGKAP & AUTO-WIDTH
     // ==========================================
     function exportToExcel() {
       const isLogin = !!currentUser;
@@ -1953,7 +1963,7 @@
 
       const wb = XLSX.utils.book_new();
 
-      // 1. Sheet Pertama: REKAPAN TOTAL Format Matriks
+      // 1. Sheet Pertama: REKAPAN TOTAL Format Matriks Standar
       const { rowsData, totalSummary } = calculateMatriksData();
       const excelRows = rowsData.map(r => ({
         "NO": r.no,
@@ -2002,9 +2012,10 @@
       });
 
       const wsRekap = XLSX.utils.json_to_sheet(excelRows);
+      autoFitColumns(wsRekap, excelRows);
       XLSX.utils.book_append_sheet(wb, wsRekap, "REKAPAN TOTAL");
 
-      // 2. Sheet per Sub-Wilayah (RT 1 s/d RT 9)
+      // 2. Sheet per Sub-Wilayah (RT 1 s/d RT 9 atau per Desa)
       if (!isGlobal) {
         const uniqueRTs = [...new Set(dataset.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
         uniqueRTs.sort((a, b) => {
@@ -2040,6 +2051,7 @@
               "ALKI": isLogin ? (d.isALKI ? 1 : "") : "Terkunci"
             }));
             const wsRT = XLSX.utils.json_to_sheet(rowsRT);
+            autoFitColumns(wsRT, rowsRT);
             const sheetTitle = (rtNomor.includes('/') ? `RT ${rtNomor.split('/')[0]}` : `RT ${rtNomor}`).substring(0, 31);
             XLSX.utils.book_append_sheet(wb, wsRT, sheetTitle);
           }
@@ -2069,6 +2081,7 @@
               "ALKI": isLogin ? (p.isALKI ? 1 : "") : "Terkunci"
             }));
             const wsDesa = XLSX.utils.json_to_sheet(rowsDesa);
+            autoFitColumns(wsDesa, rowsDesa);
             const sheetLabel = d.nama.replace('Desa ', '').substring(0, 28);
             XLSX.utils.book_append_sheet(wb, wsDesa, sheetLabel);
           }
