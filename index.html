@@ -23,6 +23,12 @@
     .animate-slide-down {
       animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+    @media print {
+      body * { visibility: hidden; }
+      #modalMatriksContent, #modalMatriksContent * { visibility: visible; }
+      #modalMatriksContent { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -61,6 +67,10 @@
       </div>
       
       <div class="flex items-center gap-2">
+        <button onclick="openModalMatriks()" class="bg-teal-600/80 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm border border-teal-400/40">
+          <i class="fa-solid fa-table-cells-large text-amber-300"></i> <span>Matriks Rekap Desa</span>
+        </button>
+
         <div id="adminActions" class="hidden flex items-center gap-2">
           <button onclick="openModalDesa()" class="bg-teal-800 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm border border-teal-500">
             <i class="fa-solid fa-gears"></i> <span class="hidden md:inline">Kelola Desa & Sistem</span>
@@ -258,6 +268,67 @@
     </div>
   </main>
 
+  <div id="modalMatriks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4">
+    <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-6xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="p-4 sm:p-5 bg-teal-800 text-white flex justify-between items-center no-print">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="p-2 bg-white/10 rounded-lg">
+            <i class="fa-solid fa-table-cells-large text-amber-300 text-xl"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base sm:text-lg leading-tight" id="matriksModalTitle">Matriks Rekapitulasi Data Sasaran Desa</h3>
+            <p class="text-xs text-teal-200" id="matriksModalSubtitle">Tahun 2026 - Wilayah Kerja Puskesmas Sampanahan</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border border-teal-500 shadow-sm">
+            <i class="fa-solid fa-print"></i> Cetak
+          </button>
+          <button onclick="exportMatriksToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-file-excel"></i> Ekspor Excel
+          </button>
+          <button onclick="closeModalMatriks()" class="text-teal-200 hover:text-white p-1 text-xl transition">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto overflow-x-auto flex-1 space-y-4">
+        <div class="border border-slate-300 rounded-xl overflow-hidden shadow-sm">
+          <table class="w-full text-xs text-center border-collapse">
+            <thead class="bg-teal-900 text-white uppercase font-bold text-[11px] tracking-wider">
+              <tr class="divide-x divide-teal-800">
+                <th rowspan="2" class="p-2.5 bg-teal-950 text-left min-w-[140px]">Kategori Sasaran</th>
+                <th colspan="11" class="p-2 border-b border-teal-800 text-teal-200">Rincian Wilayah Rukun Tetangga (RT)</th>
+                <th rowspan="2" class="p-2.5 bg-teal-950 min-w-[70px] text-amber-300 font-extrabold">TOTAL</th>
+              </tr>
+              <tr class="divide-x divide-teal-800 bg-teal-800 text-[10px]">
+                <th class="p-1.5 w-10">RT 1</th>
+                <th class="p-1.5 w-10">RT 2</th>
+                <th class="p-1.5 w-10">RT 3</th>
+                <th class="p-1.5 w-10">RT 4</th>
+                <th class="p-1.5 w-10">RT 5</th>
+                <th class="p-1.5 w-10">RT 6</th>
+                <th class="p-1.5 w-10">RT 7</th>
+                <th class="p-1.5 w-10">RT 8</th>
+                <th class="p-1.5 w-10">RT 9</th>
+                <th class="p-1.5 w-10">RT 10</th>
+                <th class="p-1.5 w-10">RT 11</th>
+              </tr>
+            </thead>
+            <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700">
+              </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 no-print">
+        <span>* Data matriks otomatis dihitung dari database Firestore real-time.</span>
+        <button onclick="closeModalMatriks()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition">Tutup</button>
+      </div>
+    </div>
+  </div>
+
   <div id="modalLogin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center">
@@ -312,7 +383,7 @@
             </h4>
             <span class="text-[11px] font-mono bg-white px-2 py-0.5 rounded border border-teal-300 text-teal-800">Lokal: <strong id="modalLocalVer">v1.2.0</strong></span>
           </div>
-          <p class="text-xs text-slate-600">Saat Anda menaikkan nomor versi di bawah ini, seluruh bidan dan pengguna yang membuka aplikasi akan langsung menerima notifikasi pembaruan otomatis.</p>
+          <p class="text-xs text-slate-600">Saat Anda menaikkan nomor versi di bawah ini, seluruh pengguna yang membuka aplikasi akan menerima notifikasi pembaruan.</p>
           
           <form onsubmit="updateServerVersion(event)" class="space-y-2 pt-1">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -322,7 +393,7 @@
               </div>
               <div class="sm:col-span-2">
                 <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-0.5">Catatan Perubahan (Changelog)</label>
-                <input type="text" id="inputVersionChangelog" placeholder="Penambahan rekap PWS & perbaikan import" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                <input type="text" id="inputVersionChangelog" placeholder="Penambahan matriks rekap desa & PWS" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
               </div>
             </div>
             <div class="flex justify-end pt-1">
@@ -493,7 +564,7 @@
 
   <script>
     // ==========================================
-    // 0. VERSI APLIKASI LOKAL & AUTO-UPDATE
+    // 0. VERSI APLIKASI & AUTO-UPDATE
     // ==========================================
     const APP_VERSION = "v1.2.0";
 
@@ -709,7 +780,181 @@
     initAppVersionListener();
 
     // ==========================================
-    // 2. MANAJEMEN DESA & AUTH
+    // 2. MODAL MATRIKS REKAPAN DESA
+    // ==========================================
+    function openModalMatriks() {
+      const namaDesa = activeDesa === 'ALL' ? 'Semua Wilayah Puskesmas' : getDesaNama(activeDesa);
+      document.getElementById('matriksModalTitle').innerText = `Matriks Rekapitulasi Data Sasaran - ${namaDesa}`;
+      renderMatriksTable();
+      document.getElementById('modalMatriks').classList.remove('hidden');
+    }
+
+    function closeModalMatriks() {
+      document.getElementById('modalMatriks').classList.add('hidden');
+    }
+
+    function calculateMatriksData() {
+      // Filter dataset sesuai wilayah desa yang aktif
+      const targetData = allData.filter(p => {
+        if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
+        return true;
+      });
+
+      const rtList = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+      
+      const metrics = {
+        kk: { label: "JUMLAH KEPALA KELUARGA (KK)", rts: {}, total: 0, isHeader: true },
+        jiwa_l: { label: "Jumlah Penduduk Laki-laki (L)", rts: {}, total: 0 },
+        jiwa_p: { label: "Jumlah Penduduk Perempuan (P)", rts: {}, total: 0 },
+        jiwa_total: { label: "TOTAL JUMLAH PENDUDUK", rts: {}, total: 0, isHighlight: true },
+        pus: { label: "Pasangan Usia Subur (PUS)", rts: {}, total: 0 },
+        wus: { label: "Wanita Usia Subur (WUS)", rts: {}, total: 0 },
+        bumil: { label: "Ibu Hamil (Bumil)", rts: {}, total: 0, isHeader: true },
+        bayi: { label: "Bayi (<1 Tahun)", rts: {}, total: 0 },
+        balita: { label: "Anak Balita (1 - 5 Tahun)", rts: {}, total: 0 },
+        remaja: { label: "Remaja (10 - 18 Tahun)", rts: {}, total: 0 },
+        posbindu: { label: "Posbindu PTM (15 - 59 Tahun)", rts: {}, total: 0 },
+        pralansia: { label: "Pra Lansia (45 - 60 Tahun)", rts: {}, total: 0 },
+        lansia_6070: { label: "Lansia (>60 - 70 Tahun)", rts: {}, total: 0 },
+        lansia_70: { label: "Lansia (>70 Tahun)", rts: {}, total: 0 },
+        kb_suntik: { label: "Akseptor KB: Suntik", rts: {}, total: 0, isHeader: true },
+        kb_pil: { label: "Akseptor KB: Pil", rts: {}, total: 0 },
+        kb_implan: { label: "Akseptor KB: Implan", rts: {}, total: 0 },
+        kb_iud: { label: "Akseptor KB: IUD", rts: {}, total: 0 },
+        kb_mow: { label: "Akseptor KB: MOW", rts: {}, total: 0 },
+        kb_mop: { label: "Akseptor KB: MOP", rts: {}, total: 0 },
+        kb_kondom: { label: "Akseptor KB: Kondom", rts: {}, total: 0 },
+        kb_total: { label: "TOTAL PESERTA KB AKTIF", rts: {}, total: 0, isHighlight: true },
+        risti_4t: { label: "Risiko Tinggi 4T (Kehamilan)", rts: {}, total: 0, isDanger: true },
+        risti_alki: { label: "Risiko ALKI", rts: {}, total: 0, isDanger: true }
+      };
+
+      // Inisialisasi angka 0 per RT
+      Object.keys(metrics).forEach(k => {
+        rtList.forEach(rt => { metrics[k].rts[rt] = 0; });
+      });
+
+      // Lacak No KK unik per RT
+      const kkSets = {};
+      rtList.forEach(rt => { kkSets[rt] = new Set(); });
+
+      targetData.forEach(p => {
+        const rt = String(p.rt).trim();
+        if (!rtList.includes(rt)) return;
+
+        // KK Unik
+        if (p.no_kk && p.no_kk.length > 5) {
+          kkSets[rt].add(p.no_kk);
+        }
+
+        const usiaNum = parseInt(p.usia) || 0;
+        const isBulan = p.usia_text && p.usia_text.toLowerCase().includes('bulan');
+
+        // Penduduk
+        if (p.jk === 'L') metrics.jiwa_l.rts[rt]++;
+        if (p.jk === 'P') metrics.jiwa_p.rts[rt]++;
+        metrics.jiwa_total.rts[rt]++;
+
+        // KIA & BKKBN
+        if (p.isPUS) metrics.pus.rts[rt]++;
+        if (p.isWUS) metrics.wus.rts[rt]++;
+        if (p.isBumil) metrics.bumil.rts[rt]++;
+        
+        if (p.isBayi || (isBulan && parseInt(p.usia_text) <= 12)) {
+          metrics.bayi.rts[rt]++;
+        } else if (p.isBalita || isBulan || (usiaNum >= 1 && usiaNum <= 5)) {
+          metrics.balita.rts[rt]++;
+        }
+
+        if (p.isRemaja || (usiaNum >= 10 && usiaNum <= 18)) metrics.remaja.rts[rt]++;
+        if (p.isPosbindu || (usiaNum >= 15 && usiaNum <= 59)) metrics.posbindu.rts[rt]++;
+        if (usiaNum >= 45 && usiaNum <= 60) metrics.pralansia.rts[rt]++;
+        if (usiaNum > 60 && usiaNum <= 70) metrics.lansia_6070.rts[rt]++;
+        if (usiaNum > 70) metrics.lansia_70.rts[rt]++;
+
+        // Metode KB
+        const kbClean = (p.kb || '').toUpperCase();
+        if (kbClean.includes('SUNTIK')) { metrics.kb_suntik.rts[rt]++; metrics.kb_total.rts[rt]++; }
+        else if (kbClean.includes('PIL')) { metrics.kb_pil.rts[rt]++; metrics.kb_total.rts[rt]++; }
+        else if (kbClean.includes('IMPLAN')) { metrics.kb_implan.rts[rt]++; metrics.kb_total.rts[rt]++; }
+        else if (kbClean.includes('IUD')) { metrics.kb_iud.rts[rt]++; metrics.kb_total.rts[rt]++; }
+        else if (kbClean.includes('MOW')) { metrics.kb_mow.rts[rt]++; metrics.kb_total.rts[rt]++; }
+        else if (kbClean.includes('MOP')) { metrics.kb_mop.rts[rt]++; metrics.kb_total.rts[rt]++; }
+        else if (kbClean.includes('KONDOM')) { metrics.kb_kondom.rts[rt]++; metrics.kb_total.rts[rt]++; }
+        else if (kbClean !== '' && kbClean !== '-') { metrics.kb_total.rts[rt]++; }
+
+        // Risiko Tinggi
+        if (p.is4T) metrics.risti_4t.rts[rt]++;
+        if (p.isALKI) metrics.risti_alki.rts[rt]++;
+      });
+
+      // Hitung Total KK & Total Horizontal
+      rtList.forEach(rt => {
+        metrics.kk.rts[rt] = kkSets[rt].size;
+      });
+
+      Object.keys(metrics).forEach(k => {
+        let sum = 0;
+        rtList.forEach(rt => { sum += metrics[k].rts[rt]; });
+        metrics[k].total = sum;
+      });
+
+      return { rtList, metrics };
+    }
+
+    function renderMatriksTable() {
+      const { rtList, metrics } = calculateMatriksData();
+      const tbody = document.getElementById('matriksTableBody');
+
+      tbody.innerHTML = Object.keys(metrics).map(k => {
+        const item = metrics[k];
+        let rowClass = "hover:bg-teal-50/60 transition";
+        let labelClass = "text-left font-medium";
+
+        if (item.isHighlight) {
+          rowClass = "bg-amber-50/80 font-bold hover:bg-amber-100/70 text-slate-900";
+        } else if (item.isHeader) {
+          rowClass = "bg-slate-100/90 font-semibold text-teal-900 border-t-2 border-slate-300";
+        } else if (item.isDanger) {
+          rowClass = "bg-rose-50/50 hover:bg-rose-100/50 text-rose-900 font-medium";
+        }
+
+        const rtCols = rtList.map(rt => `
+          <td class="p-2 border-x border-slate-200">${item.rts[rt] === 0 ? '<span class="text-slate-300">-</span>' : item.rts[rt]}</td>
+        `).join('');
+
+        return `
+          <tr class="${rowClass}">
+            <td class="p-2.5 border-r border-slate-300 ${labelClass}">${item.label}</td>
+            ${rtCols}
+            <td class="p-2 font-bold bg-slate-100 border-l border-slate-300 text-teal-900">${item.total === 0 ? '<span class="text-slate-300">-</span>' : item.total}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportMatriksToExcel() {
+      const { rtList, metrics } = calculateMatriksData();
+      const namaDesa = activeDesa === 'ALL' ? 'Semua_Puskesmas' : activeDesa;
+
+      const exportRows = Object.keys(metrics).map(k => {
+        const item = metrics[k];
+        const rowObj = { "Indikator / Kategori Sasaran": item.label };
+        rtList.forEach(rt => {
+          rowObj[`RT ${rt}`] = item.rts[rt];
+        });
+        rowObj["TOTAL DESA"] = item.total;
+        return rowObj;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(exportRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Matriks PWS Rekap");
+      XLSX.writeFile(wb, `Matriks_Rekap_${namaDesa}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    // ==========================================
+    // 3. MANAJEMEN DESA & AUTH
     // ==========================================
     function openModalDesa() {
       if (!currentUser) return alert("Hanya admin yang dapat mengelola sistem.");
@@ -853,7 +1098,7 @@
     }
 
     // ==========================================
-    // 3. DASHBOARD & FILTERING
+    // 4. DASHBOARD & FILTERING
     // ==========================================
     function updateDashboard() {
       const filteredByDesa = allData.filter(p => {
@@ -994,7 +1239,7 @@
     }
 
     // ==========================================
-    // 4. CRUD DATA SASARAN
+    // 5. CRUD DATA SASARAN
     // ==========================================
     function openModalTambah() {
       if (!currentUser) return alert("Hanya petugas yang berhak menambah sasaran.");
@@ -1126,7 +1371,7 @@
     }
 
     // ==========================================
-    // 5. IMPORT & EKSPOR EXCEL (ANTI-DUPLIKAT)
+    // 6. IMPORT & EKSPOR EXCEL
     // ==========================================
     function triggerExcelUpload() {
       if (activeDesa === 'ALL') {
@@ -1297,7 +1542,7 @@
               statusEl.innerHTML = `<span class="text-teal-700 font-semibold"><i class="fa-solid fa-spinner fa-spin"></i> Sinkronisasi ${namaDesaTarget}... (${totalProcessed}/${batchData.length})</span>`;
             }
 
-            alert(`Sukses! ${batchData.length} data ${namaDesaTarget} berhasil tersimpan ke Firebase.`);
+            alert(`Sukses! ${batchData.length} data ${namaDesaTarget} berhasil tersimpan.`);
           } else {
             allData = batchData.map(d => ({ id: d.docId, ...d }));
             updateDashboard();
