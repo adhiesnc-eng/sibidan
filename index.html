@@ -63,12 +63,18 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
+  <!-- TOAST NOTIFIKASI SALIN CEPAT -->
+  <div id="copyToast" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs font-semibold border border-white/10">
+    <span class="text-emerald-400 text-sm"><i class="fa-solid fa-circle-check"></i></span>
+    <span id="copyToastText">Teks berhasil disalin ke clipboard</span>
+  </div>
+
   <!-- BANNER AUTO-UPDATE -->
   <div id="updateBanner" class="hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600 text-white shadow-lg sticky top-0 z-50 animate-slide-down border-b border-white/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
       <div class="flex items-center gap-2">
         <span class="p-1 bg-white/20 rounded-lg"><i class="fa-solid fa-arrows-rotate animate-spin text-amber-300"></i></span>
-        <span class="font-medium">Pembaruan Tersedia: <strong id="newVersionText">v1.2.1</strong> &bull; <span id="newVersionDesc" class="opacity-90">Peningkatan sistem dan perbaikan fitur</span></span>
+        <span class="font-medium">Pembaruan Tersedia: <strong id="newVersionText">v1.2.7</strong> &bull; <span id="newVersionDesc" class="opacity-90">Statistik kartu dinamis mengikuti pilihan filter RT</span></span>
       </div>
       <div class="flex items-center gap-2">
         <button id="btnApplyUpdate" onclick="applyAppUpdate()" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-3 py-1 rounded-md shadow-sm transition flex items-center gap-1.5 text-xs">
@@ -101,12 +107,10 @@
       
       <!-- Action Buttons & Auth -->
       <div class="flex items-center gap-2">
-        <!-- Tombol Matriks Rekapitulasi Sasaran -->
         <button onclick="openModalMatriks()" class="bg-teal-600/90 hover:bg-teal-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm border border-teal-400/40">
           <i class="fa-solid fa-table-cells text-amber-300"></i> <span>Matriks Rekap Sasaran</span>
         </button>
 
-        <!-- Menu Khusus Petugas/Bidan (Admin) -->
         <div id="adminActions" class="hidden flex items-center gap-2">
           <button onclick="openModalDesa()" class="bg-teal-800 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm border border-teal-500">
             <i class="fa-solid fa-gears"></i> <span class="hidden md:inline">Kelola Desa & Sistem</span>
@@ -123,7 +127,6 @@
           <input type="file" id="excelFileInput" class="hidden" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
         </div>
 
-        <!-- Tombol Login / Logout -->
         <div id="authContainer">
           <button id="btnLoginModal" onclick="openLoginModal()" class="bg-white text-teal-800 hover:bg-teal-50 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm">
             <i class="fa-solid fa-right-to-bracket"></i> Login Bidan / Admin
@@ -168,11 +171,11 @@
       </div>
     </div>
 
-    <!-- REKAP KARTU SASARAN PWS KIA / KB / POSYANDU -->
+    <!-- REKAP KARTU SASARAN (OTOMATIS SINKRON MENGIKUTI FILTER RT) -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
         <div class="text-slate-500 text-xs font-medium flex items-center justify-between">
-          <span>Total Penduduk</span>
+          <span id="labelStatTotal">Total Penduduk</span>
           <i class="fa-solid fa-users text-slate-400"></i>
         </div>
         <div class="mt-2 text-2xl font-bold text-slate-800" id="statTotal">-</div>
@@ -252,7 +255,7 @@
         </div>
 
         <div class="sm:col-span-3">
-          <select id="filterRT" onchange="applyFilters()" class="w-full py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white">
+          <select id="filterRT" onchange="onFilterRTChange()" class="w-full py-2 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white font-medium text-slate-700">
             <option value="">Semua Wilayah RT/RW</option>
           </select>
         </div>
@@ -265,10 +268,9 @@
       </div>
     </div>
 
-    <!-- TABEL DATA SASARAN DENGAN PAGINASI -->
+    <!-- TABEL DATA SASARAN DENGAN QUICK COPY & PAGINASI -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       
-      <!-- Pengaturan Jumlah Baris & Info -->
       <div class="px-4 py-3 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2 text-slate-600 font-medium">
           <span>Tampilkan</span>
@@ -307,7 +309,6 @@
         </table>
       </div>
 
-      <!-- KONTROL PAGINASI & FOOTER -->
       <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-600 gap-3">
         <div class="flex items-center gap-2">
           <span id="recordCount">Menampilkan 0 data</span>
@@ -316,20 +317,19 @@
         </div>
 
         <div class="flex items-center gap-1.5" id="paginationControls">
-          <!-- Tombol digenerate via Javascript -->
         </div>
       </div>
     </div>
   </main>
 
-  <!-- MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN (DENGAN LOCK FREEZE COLUMN NAMA/DESA) -->
+  <!-- MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN -->
   <div id="modalMatriks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-2 sm:p-4">
     <div id="modalMatriksContent" class="bg-white rounded-2xl max-w-7xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
       
       <!-- Header Modal -->
       <div class="p-4 sm:p-5 bg-white border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 no-print">
         <div>
-          <h3 class="font-extrabold text-base sm:text-lg text-slate-800 tracking-tight" id="matriksModalTitle">DATA PENDUDUK SELURUH WILAYAH PUSKESMAS</h3>
+          <h3 class="font-extrabold text-base sm:text-lg text-slate-800 tracking-tight" id="matriksModalTitle">DATA PENDUDUK DESA SAMPANAHAN HILIR</h3>
           <p class="text-xs font-semibold text-teal-700 uppercase tracking-wider" id="matriksModalSubtitle">REKAPITULASI SASARAN KESEHATAN TAHUN 2026</p>
         </div>
         <div class="flex items-center gap-2">
@@ -345,25 +345,22 @@
         </div>
       </div>
 
-      <!-- KONTEN TABEL MATRIKS DENGAN HORIZONTAL SCROLL & FREEZE STICKY -->
+      <!-- KONTEN TABEL MATRIKS DENGAN FREEZE STICKY -->
       <div class="p-3 sm:p-5 overflow-y-auto overflow-x-auto flex-1">
         <div class="border border-slate-300 rounded-xl overflow-x-auto shadow-sm bg-white">
           <table class="w-full text-xs text-center border-collapse whitespace-nowrap min-w-[1000px]">
             <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b-2 border-slate-300" id="matriksTableHead">
-              <!-- Header bertingkat dirender otomatis -->
             </thead>
             <tbody id="matriksTableBody" class="divide-y divide-slate-200 text-slate-700 text-xs">
-              <!-- Baris data dirender otomatis -->
             </tbody>
             <tfoot id="matriksTableFoot" class="bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300 text-xs">
-              <!-- Baris Jumlah Total -->
             </tfoot>
           </table>
         </div>
       </div>
 
       <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-2 no-print">
-        <span>* Kolom nama wilayah terkunci (freeze), geser ke kanan untuk melihat rincian sasaran.</span>
+        <span>* Kolom wilayah terkunci (freeze). Seluruh sasaran dihitung matematis sinkron dari tabel per RT.</span>
         <button onclick="closeModalMatriks()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition">Tutup</button>
       </div>
     </div>
@@ -418,7 +415,6 @@
       </div>
 
       <div class="p-6 space-y-6 overflow-y-auto flex-1">
-        <!-- Kontrol Auto-Update Versi -->
         <div class="p-4 bg-teal-50/70 border border-teal-200 rounded-xl space-y-3">
           <div class="flex items-center justify-between">
             <h4 class="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -432,11 +428,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-0.5">Versi Rilis</label>
-                <input type="text" id="inputVersionCode" required placeholder="v1.2.1" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                <input type="text" id="inputVersionCode" required placeholder="v1.2.7" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono">
               </div>
               <div class="sm:col-span-2">
                 <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-0.5">Catatan Perubahan (Changelog)</label>
-                <input type="text" id="inputVersionChangelog" placeholder="Penambahan freeze column lock pada matriks dan auto-check sasaran" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                <input type="text" id="inputVersionChangelog" placeholder="Sinkronisasi kartu ringkasan saat memilih RT" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
               </div>
             </div>
             <div class="flex justify-end pt-1">
@@ -447,7 +443,6 @@
           </form>
         </div>
 
-        <!-- Master Desa -->
         <div class="space-y-3">
           <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-map-location-dot text-teal-600"></i> Daftar Desa Binaan Puskesmas
@@ -469,7 +464,6 @@
                 </tr>
               </thead>
               <tbody id="listMasterDesaBody" class="divide-y divide-slate-200">
-                <!-- Render list desa -->
               </tbody>
             </table>
           </div>
@@ -482,7 +476,7 @@
     </div>
   </div>
 
-  <!-- MODAL FORM SASARAN (DENGAN TEMPAT & TANGGAL LAHIR TERPISAH) -->
+  <!-- MODAL FORM SASARAN -->
   <div id="modalForm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="p-5 bg-teal-700 text-white flex justify-between items-center rounded-t-2xl">
@@ -501,7 +495,6 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Wilayah Desa</label>
             <select id="formDesa" required class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white font-medium">
-              <!-- Render opsi desa -->
             </select>
           </div>
           <div>
@@ -522,8 +515,19 @@
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Terdeteksi Otomatis
               </span>
             </label>
-            <input type="text" id="formNIK" oninput="handleNIKInput(this.value)" placeholder="16 Digit NIK Sasaran" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-mono focus:ring-2 focus:ring-teal-500 outline-none">
+            <input type="text" id="formNIK" maxlength="16" oninput="handleNIKInput(this.value)" placeholder="16 Digit NIK Sasaran" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-mono focus:ring-2 focus:ring-teal-500 outline-none transition">
+            
+            <div class="flex items-center justify-between text-[11px] mt-1">
+              <span id="nikCharCounter" class="text-slate-400 font-mono">0/16 digit</span>
+              <span id="nikValidationStatus" class="font-medium"></span>
+            </div>
+            
+            <div id="nikDuplicateAlert" class="hidden mt-1.5 p-2 bg-rose-50 border border-rose-300 text-rose-700 text-xs rounded-lg flex items-start gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation mt-0.5 text-rose-500"></i>
+              <div id="nikDuplicateAlertText" class="leading-tight"></div>
+            </div>
           </div>
+
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Lengkap</label>
             <input type="text" id="formNama" required placeholder="Nama Sasaran" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
@@ -551,7 +555,6 @@
           </div>
         </div>
 
-        <!-- Kolom Tempat dan Tanggal Lahir Dipisah -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tempat Lahir</label>
@@ -567,7 +570,6 @@
           </div>
         </div>
 
-        <!-- Status Sasaran KIA / KB -->
         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
           <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wider">Status Sasaran KIA & BKKBN</h4>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -608,7 +610,7 @@
 
         <div class="flex justify-end gap-3 pt-3">
           <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Batal</button>
-          <button type="submit" class="px-5 py-2 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold shadow-sm">Simpan Data</button>
+          <button type="submit" id="btnSubmitSasaran" class="px-5 py-2 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold shadow-sm transition">Simpan Data</button>
         </div>
       </form>
     </div>
@@ -617,8 +619,60 @@
   <!-- SCRIPT LOGIC & FIREBASE -->
   <script>
     // ==========================================
-    // 0. AUTO-DETEKSI NIK & AUTO-CENTANG SASARAN
+    // 0. FITUR QUICK COPY (SALIN CEPAT KE CLIPBOARD)
     // ==========================================
+    let toastTimeout = null;
+
+    function copyToClipboard(text, btnElement, label) {
+      if (!text || text === '-' || text.includes('***')) return;
+
+      const cleanText = String(text).replace(/['",\s]/g, '').trim();
+
+      navigator.clipboard.writeText(cleanText).then(() => {
+        if (btnElement) {
+          const originalHTML = btnElement.innerHTML;
+          btnElement.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i>';
+          btnElement.classList.add('scale-110');
+          setTimeout(() => {
+            btnElement.innerHTML = originalHTML;
+            btnElement.classList.remove('scale-110');
+          }, 1500);
+        }
+
+        const toast = document.getElementById('copyToast');
+        const toastText = document.getElementById('copyToastText');
+        toastText.innerText = `${label} (${cleanText}) berhasil disalin!`;
+        toast.classList.remove('translate-y-16', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toast.classList.remove('translate-y-0', 'opacity-100');
+          toast.classList.add('translate-y-16', 'opacity-0');
+        }, 2200);
+      }).catch(err => {
+        console.error("Gagal menyalin:", err);
+      });
+    }
+
+    // ==========================================
+    // 1. NORMALISASI PARSING RT
+    // ==========================================
+    function normalizeRT(rtRaw) {
+      if (!rtRaw) return '0';
+      let s = String(rtRaw).trim();
+      if (s.includes('/')) s = s.split('/')[0].trim();
+      const match = s.match(/\d+/);
+      if (!match) return '0';
+      const num = parseInt(match[0], 10);
+      return (isNaN(num) || num === 0) ? '0' : String(num);
+    }
+
+    // ==========================================
+    // 2. AUTO-DETEKSI NIK, VALIDASI 16 DIGIT & DUPLIKASI
+    // ==========================================
+    let hasDuplicateNIK = false;
+
     function calculateAgeFromDate(birthDateObj) {
       if (!birthDateObj || isNaN(birthDateObj.getTime())) return null;
 
@@ -726,10 +780,77 @@
       };
     }
 
+    function checkDuplicateNIKRealTime(nikDigits, currentDocId) {
+      const duplicateAlert = document.getElementById('nikDuplicateAlert');
+      const duplicateAlertText = document.getElementById('nikDuplicateAlertText');
+      const btnSubmit = document.getElementById('btnSubmitSasaran');
+      const validationStatus = document.getElementById('nikValidationStatus');
+      const inputNIK = document.getElementById('formNIK');
+
+      hasDuplicateNIK = false;
+
+      if (!nikDigits || nikDigits.length < 16) {
+        duplicateAlert.classList.add('hidden');
+        if (btnSubmit) btnSubmit.disabled = false;
+        return;
+      }
+
+      const duplicateItem = allData.find(item => {
+        const itemNIK = String(item.nik || '').replace(/\D/g, '').trim();
+        return itemNIK === nikDigits && item.id !== currentDocId;
+      });
+
+      if (duplicateItem) {
+        hasDuplicateNIK = true;
+        const desaNama = getDesaNama(getDesaClean(duplicateItem));
+        const rtNama = duplicateItem.rt || '-';
+        duplicateAlertText.innerHTML = `<strong>Peringatan Duplikasi:</strong> NIK ini sudah terdaftar atas nama <strong>${duplicateItem.nama}</strong> (${desaNama}, RT ${rtNama}).`;
+        duplicateAlert.classList.remove('hidden');
+
+        inputNIK.classList.remove('border-slate-300', 'border-emerald-500');
+        inputNIK.classList.add('border-rose-500');
+        validationStatus.innerHTML = '<span class="text-rose-600 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> NIK Duplikat</span>';
+
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      } else {
+        duplicateAlert.classList.add('hidden');
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      }
+    }
+
     function handleNIKInput(val) {
-      const parsed = parseNIK(val);
+      const cleanVal = String(val).replace(/\D/g, '').trim();
+      const inputEl = document.getElementById('formNIK');
+      inputEl.value = cleanVal;
+
+      const currentDocId = document.getElementById('formDocId').value;
+      const counterEl = document.getElementById('nikCharCounter');
+      const validationStatus = document.getElementById('nikValidationStatus');
       const badge = document.getElementById('nikDetectBadge');
-      
+
+      counterEl.innerText = `${cleanVal.length}/16 digit`;
+
+      if (cleanVal.length === 16) {
+        inputEl.classList.remove('border-slate-300', 'border-rose-500', 'border-amber-400');
+        inputEl.classList.add('border-emerald-500');
+        validationStatus.innerHTML = '<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle"></i> Format Valid</span>';
+      } else if (cleanVal.length > 0) {
+        inputEl.classList.remove('border-emerald-500', 'border-rose-500');
+        inputEl.classList.add('border-amber-400');
+        validationStatus.innerHTML = `<span class="text-amber-600 font-medium">Kurang ${16 - cleanVal.length} digit</span>`;
+      } else {
+        inputEl.classList.remove('border-emerald-500', 'border-rose-500', 'border-amber-400');
+        inputEl.classList.add('border-slate-300');
+        validationStatus.innerHTML = '';
+      }
+
+      const parsed = parseNIK(cleanVal);
       if (parsed) {
         badge.classList.remove('hidden');
         document.getElementById('formJK').value = parsed.gender;
@@ -741,6 +862,8 @@
       } else {
         badge.classList.add('hidden');
       }
+
+      checkDuplicateNIKRealTime(cleanVal, currentDocId);
     }
 
     function handleTglLahirChange(val) {
@@ -758,9 +881,9 @@
     }
 
     // ==========================================
-    // 1. SISTEM VERSI DINAMIS & AUTO-UPDATE ENGINE
+    // 3. SISTEM VERSI DINAMIS & AUTO-UPDATE ENGINE
     // ==========================================
-    const DEFAULT_APP_VERSION = "v1.2.0";
+    const DEFAULT_APP_VERSION = "v1.2.7";
     let localAppVersion = localStorage.getItem('sibidan_app_version') || DEFAULT_APP_VERSION;
     let pendingServerVersion = "";
 
@@ -773,7 +896,7 @@
     }
 
     // ==========================================
-    // 2. KONFIGURASI FIREBASE PROJECT
+    // 4. KONFIGURASI FIREBASE PROJECT
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyDBmMLQzX6yQFGeqF46AZuPIUiNS5TuqAI",
@@ -826,7 +949,7 @@
         if (!doc.exists) {
           db.collection("system_config").doc("app_info").set({
             latestVersion: localAppVersion,
-            changelog: "Rilis stabil Sistem Informasi Bidan Desa Terpadu",
+            changelog: "Statistik kartu dinamis mengikuti pilihan filter RT",
             updatedAt: new Date().toISOString()
           });
           return;
@@ -960,26 +1083,28 @@
       const curVal = filterRT.value;
 
       const targetData = allData.filter(p => (activeDesa === 'ALL') || (getDesaClean(p) === activeDesa));
-      const uniqueRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
-      uniqueRTs.sort((a, b) => {
-        const numA = parseInt(a.replace(/\D/g, '')) || 0;
-        const numB = parseInt(b.replace(/\D/g, '')) || 0;
-        return numA - numB;
-      });
+      const uniqueRTs = [...new Set(targetData.map(p => normalizeRT(p.rt)).filter(x => x !== '0'))];
+      uniqueRTs.sort((a, b) => parseInt(a) - parseInt(b));
 
       let optHTML = '<option value="">Semua Wilayah RT/RW</option>';
       if (uniqueRTs.length > 0) {
-        uniqueRTs.forEach(rt => {
-          optHTML += `<option value="${rt}">${rt.startsWith('0') || rt.includes('/') ? 'RT/RW ' + rt : 'RT ' + rt}</option>`;
+        uniqueRTs.forEach(rtNum => {
+          optHTML += `<option value="${rtNum}">RT ${rtNum}</option>`;
         });
       } else {
-        for (let i = 1; i <= 11; i++) {
-          optHTML += `<option value="${i}">RT 0${i}</option>`;
+        for (let i = 1; i <= 9; i++) {
+          optHTML += `<option value="${i}">RT ${i}</option>`;
         }
       }
 
       filterRT.innerHTML = optHTML;
       filterRT.value = curVal;
+    }
+
+    // Handler Saat RT Dipilih
+    function onFilterRTChange() {
+      updateDashboard();
+      applyFilters();
     }
 
     if (auth) {
@@ -1029,7 +1154,7 @@
     initAppVersionListener();
 
     // ==========================================
-    // 3. MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN (FREEZE COLUMN NO & DESA)
+    // 5. MODAL MATRIKS REKAPITULASI SASARAN KESEHATAN
     // ==========================================
     function openModalMatriks() {
       const isGlobal = (activeDesa === 'ALL');
@@ -1057,30 +1182,42 @@
         rowGroups = masterDesaList.map((d, idx) => ({
           key: d.id,
           no: idx + 1,
-          label: d.nama
+          label: d.nama,
+          type: 'DESA'
         }));
       } else {
-        const foundRTs = [...new Set(targetData.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
-        foundRTs.sort((a, b) => {
-          const numA = parseInt(a.replace(/\D/g, '')) || 0;
-          const numB = parseInt(b.replace(/\D/g, '')) || 0;
-          return numA - numB;
-        });
+        const foundRTNums = [...new Set(targetData.map(p => normalizeRT(p.rt)).filter(x => x !== '0'))];
+        foundRTNums.sort((a, b) => parseInt(a) - parseInt(b));
 
-        if (foundRTs.length === 0) {
-          for (let i = 1; i <= 9; i++) foundRTs.push(String(i));
+        if (foundRTNums.length === 0) {
+          for (let i = 1; i <= 9; i++) foundRTNums.push(String(i));
         }
 
-        rowGroups = foundRTs.map((rt, idx) => ({
-          key: rt,
+        rowGroups = foundRTNums.map((rtNum, idx) => ({
+          key: rtNum,
           no: idx + 1,
-          label: rt.includes('/') ? `RT ${rt.split('/')[0]}` : (rt.startsWith('0') ? `RT ${parseInt(rt)}` : `RT ${rt}`)
+          label: `RT ${rtNum}`,
+          type: 'RT'
         }));
+
+        const hasUnmapped = targetData.some(p => normalizeRT(p.rt) === '0');
+        if (hasUnmapped) {
+          rowGroups.push({
+            key: '0',
+            no: rowGroups.length + 1,
+            label: 'RT Lainnya / Belum Terdata',
+            type: 'RT'
+          });
+        }
       }
 
       const rowsData = rowGroups.map(group => {
         const items = targetData.filter(p => {
-          return isGlobal ? (getDesaClean(p) === group.key) : (String(p.rt).trim() === group.key);
+          if (isGlobal) {
+            return getDesaClean(p) === group.key;
+          } else {
+            return normalizeRT(p.rt) === group.key;
+          }
         });
 
         const kkSet = new Set();
@@ -1091,7 +1228,7 @@
         let remaja_l = 0, remaja_p = 0;
 
         items.forEach(p => {
-          if (p.no_kk && p.no_kk.length > 5) kkSet.add(p.no_kk);
+          if (p.no_kk && String(p.no_kk).replace(/\D/g, '').length > 5) kkSet.add(p.no_kk);
 
           const isBulan = p.usia_text && String(p.usia_text).toLowerCase().includes('bulan');
           const usiaNum = isBulan ? 0 : (parseInt(p.usia) || 0);
@@ -1330,16 +1467,14 @@
         "TOTAL REMAJA": totalSummary.remaja_total
       });
 
-      const ws = XLSX.utils.json_to_sheet(excelRows);
-      autoFitColumns(ws, excelRows);
-      
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "REKAPAN TOTAL");
+      const wsRekap = XLSX.utils.json_to_sheet(excelRows);
+      autoFitColumns(wsRekap, excelRows);
+      XLSX.utils.book_append_sheet(wb, wsRekap, "REKAPAN TOTAL");
       XLSX.writeFile(wb, `REKAP_SASARAN_${namaDesa}_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
     // ==========================================
-    // 4. RESET DATA DESA AKTIF
+    // 6. RESET DATA DESA AKTIF
     // ==========================================
     async function hapusDataDesaAktif() {
       if (!currentUser) return alert("Hanya admin/petugas yang berhak mereset data.");
@@ -1382,7 +1517,7 @@
     }
 
     // ==========================================
-    // 5. MANAJEMEN MASTER DESA & AUTH
+    // 7. MANAJEMEN MASTER DESA & AUTH
     // ==========================================
     function openModalDesa() {
       if (!currentUser) return alert("Hanya admin yang dapat mengelola sistem.");
@@ -1461,8 +1596,8 @@
       const d = masterDesaList.find(x => x.id === activeDesa);
       footerLabel.innerText = activeDesa === 'ALL' ? "Wilayah: Seluruh Wilayah Puskesmas" : `Wilayah: ${d ? d.nama : activeDesa}`;
       currentPage = 1;
-      updateDashboard();
       updateRTFilterDropdown();
+      updateDashboard();
       applyFilters();
     }
 
@@ -1528,18 +1663,28 @@
     }
 
     // ==========================================
-    // 6. DASHBOARD & FILTERING DENGAN PAGINASI
+    // 8. DASHBOARD DINAMIS IKUTI RT & FILTERING
     // ==========================================
     function updateDashboard() {
-      const filteredByDesa = allData.filter(p => {
-        if (activeDesa === 'ALL') return true;
-        return getDesaClean(p) === activeDesa;
+      const filterRT = document.getElementById('filterRT') ? document.getElementById('filterRT').value : '';
+      const labelStatTotal = document.getElementById('labelStatTotal');
+
+      if (labelStatTotal) {
+        labelStatTotal.innerText = filterRT ? `Total Penduduk (RT ${filterRT})` : 'Total Penduduk';
+      }
+
+      const filteredByWilayah = allData.filter(p => {
+        // Filter Desa
+        if (activeDesa !== 'ALL' && getDesaClean(p) !== activeDesa) return false;
+        // Filter RT dinamis
+        if (filterRT && normalizeRT(p.rt) !== normalizeRT(filterRT)) return false;
+        return true;
       });
 
-      const total = filteredByDesa.length;
+      const total = filteredByWilayah.length;
       let bumil = 0, balita = 0, kb = 0, risti = 0, lansia = 0;
 
-      filteredByDesa.forEach(p => {
+      filteredByWilayah.forEach(p => {
         const isBulan = p.usia_text && String(p.usia_text).toLowerCase().includes('bulan');
         const usiaNum = isBulan ? 0 : (parseInt(p.usia) || 0);
 
@@ -1599,7 +1744,7 @@
           (p.rt && p.rt.toLowerCase().includes(keyword))
         );
 
-        const matchRT = rtFilter === "" || String(p.rt).trim() === String(rtFilter).trim();
+        const matchRT = rtFilter === "" || normalizeRT(p.rt) === normalizeRT(rtFilter);
 
         let matchTab = true;
         const isBulan = p.usia_text && String(p.usia_text).toLowerCase().includes('bulan');
@@ -1668,17 +1813,35 @@
         const displayedNIK = isLogin ? (item.nik || '-') : maskSensitive(item.nik);
         const desaLabel = getDesaNama(getDesaClean(item));
 
+        const copyKKBtn = (isLogin && item.no_kk && item.no_kk !== '-') ? `
+          <button type="button" onclick="copyToClipboard('${item.no_kk}', this, 'No. KK')" class="text-slate-400 hover:text-teal-600 ml-1.5 transition inline-flex items-center p-0.5" title="Salin No. KK">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        ` : '';
+
+        const copyNIKBtn = (isLogin && item.nik && item.nik !== '-') ? `
+          <button type="button" onclick="copyToClipboard('${item.nik}', this, 'NIK')" class="text-slate-400 hover:text-teal-600 ml-1.5 transition inline-flex items-center p-0.5" title="Salin NIK">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        ` : '';
+
         return `
           <tr class="hover:bg-slate-50 transition">
             <td class="py-3 px-3 text-center text-slate-400">${startIndex + index + 1}</td>
             <td class="py-3 px-3">
               <div class="font-bold text-xs text-teal-800">${desaLabel}</div>
               <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-800 mt-0.5 mb-1">${item.rt ? (item.rt.startsWith('0') || item.rt.includes('/') ? 'RT/RW ' + item.rt : 'RT ' + item.rt) : '-'}</span>
-              <div class="text-[11px] text-slate-400">KK: ${displayedNoKK}</div>
+              <div class="text-[11px] text-slate-500 font-mono flex items-center">
+                <span>KK: ${displayedNoKK}</span>
+                ${copyKKBtn}
+              </div>
             </td>
             <td class="py-3 px-3 font-semibold text-slate-800">
-              ${item.nama}
-              <div class="text-[11px] text-slate-500 font-mono">NIK: ${displayedNIK}</div>
+              <div class="font-bold text-slate-800">${item.nama}</div>
+              <div class="text-[11px] text-slate-500 font-mono flex items-center">
+                <span>NIK: ${displayedNIK}</span>
+                ${copyNIKBtn}
+              </div>
               <div class="text-[11px] font-normal text-slate-400">${item.ttl || ''}</div>
             </td>
             <td class="py-3 px-3 text-center">
@@ -1708,7 +1871,6 @@
         `;
       }).join('');
 
-      // Tombol Paginasi
       let paginationHTML = `
         <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded border border-slate-300 bg-white font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
           <i class="fa-solid fa-chevron-left"></i>
@@ -1746,7 +1908,7 @@
     }
 
     // ==========================================
-    // 7. CRUD DATA SASARAN
+    // 9. CRUD DATA SASARAN
     // ==========================================
     function openModalTambah() {
       if (!currentUser) return alert("Hanya petugas yang berhak menambah sasaran.");
@@ -1754,6 +1916,20 @@
       document.getElementById('pendudukForm').reset();
       document.getElementById('formDocId').value = '';
       document.getElementById('nikDetectBadge').classList.add('hidden');
+      document.getElementById('nikDuplicateAlert').classList.add('hidden');
+      document.getElementById('nikValidationStatus').innerHTML = '';
+      document.getElementById('nikCharCounter').innerText = '0/16 digit';
+      
+      const inputNIK = document.getElementById('formNIK');
+      inputNIK.classList.remove('border-emerald-500', 'border-rose-500', 'border-amber-400');
+      inputNIK.classList.add('border-slate-300');
+
+      const btnSubmit = document.getElementById('btnSubmitSasaran');
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+
       document.getElementById('formTempatLahir').value = '';
       document.getElementById('formTglLahir').value = '';
       document.getElementById('formDesa').value = (activeDesa !== 'ALL') ? activeDesa : (masterDesaList[0]?.id || 'SAMPANAHAN_HILIR');
@@ -1774,7 +1950,9 @@
       document.getElementById('formDesa').value = getDesaClean(item);
       document.getElementById('formRT').value = item.rt || '';
       document.getElementById('formNoKK').value = item.no_kk || '';
-      document.getElementById('formNIK').value = item.nik || '';
+      
+      const nikClean = String(item.nik || '').replace(/\D/g, '').trim();
+      document.getElementById('formNIK').value = nikClean;
       document.getElementById('formNama').value = item.nama || '';
       document.getElementById('formJK').value = item.jk || 'L';
       document.getElementById('formHubungan').value = item.hubungan || '';
@@ -1808,6 +1986,23 @@
       document.getElementById('formALKI').checked = !!item.isALKI;
 
       document.getElementById('nikDetectBadge').classList.add('hidden');
+      
+      const inputNIK = document.getElementById('formNIK');
+      const counterEl = document.getElementById('nikCharCounter');
+      const validationStatus = document.getElementById('nikValidationStatus');
+      counterEl.innerText = `${nikClean.length}/16 digit`;
+
+      if (nikClean.length === 16) {
+        inputNIK.classList.remove('border-slate-300', 'border-rose-500');
+        inputNIK.classList.add('border-emerald-500');
+        validationStatus.innerHTML = '<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check-circle"></i> Format Valid</span>';
+      } else {
+        inputNIK.classList.remove('border-emerald-500', 'border-rose-500');
+        inputNIK.classList.add('border-slate-300');
+        validationStatus.innerHTML = '';
+      }
+
+      checkDuplicateNIKRealTime(nikClean, item.id);
       document.getElementById('modalForm').classList.remove('hidden');
     }
 
@@ -1818,9 +2013,19 @@
       const docId = document.getElementById('formDocId').value;
       const desaVal = document.getElementById('formDesa').value;
       const usiaVal = document.getElementById('formUsia').value.trim();
-      const nikClean = document.getElementById('formNIK').value.replace(/['",\s]/g, '').trim();
+      const nikClean = document.getElementById('formNIK').value.replace(/\D/g, '').trim();
       const namaClean = document.getElementById('formNama').value.trim();
       const rtClean = document.getElementById('formRT').value.trim();
+
+      if (hasDuplicateNIK) {
+        alert("Penyimpanan ditolak: NIK ini sudah terdaftar pada sasaran lain di sistem. Harap gunakan NIK yang valid!");
+        return;
+      }
+
+      if (nikClean.length > 0 && nikClean.length !== 16) {
+        const konfirmasiNIK = confirm(`Panjang NIK yang Anda masukkan (${nikClean.length} digit) tidak sesuai standar 16 digit.\n\nApakah tetap ingin menyimpan data ini?`);
+        if (!konfirmasiNIK) return;
+      }
       
       const tempatLahirVal = document.getElementById('formTempatLahir').value.trim();
       const tglLahirVal = document.getElementById('formTglLahir').value;
@@ -1892,7 +2097,7 @@
             const slugNama = namaClean.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
             const slugRT = rtClean.replace(/[^a-zA-Z0-9]/g, '_');
             const slugTgl = ttlClean.replace(/[^a-zA-Z0-9]/g, '_');
-            targetId = `${desaVal}_RT${slugRT}_${slugNama}_${slugTgl}`;
+            targetId = `${desaVal}_RT${slugRT}_${slugNama}_${slugTgl}_${Date.now().toString().slice(-4)}`;
           }
         }
 
@@ -1921,7 +2126,7 @@
     }
 
     // ==========================================
-    // 8. IMPORT EXCEL AUTO-HEADER DETECTION
+    // 10. IMPORT EXCEL DENGAN PENYARINGAN KETAT
     // ==========================================
     function triggerExcelUpload() {
       if (activeDesa === 'ALL') {
@@ -1956,9 +2161,11 @@
 
           workbook.SheetNames.forEach(sheetName => {
             const cleanSheetName = sheetName.toUpperCase().replace(/\s+/g, '');
-            if (!cleanSheetName.includes('RT') || cleanSheetName.includes('DATA') || cleanSheetName.includes('REKAP')) return;
+            if (cleanSheetName.includes('REKAP') || cleanSheetName.includes('TOTAL') || cleanSheetName.includes('RESUME')) return;
 
-            const rtFromSheet = cleanSheetName.replace(/\D/g, '') || '1';
+            const sheetMatch = cleanSheetName.match(/\d+/);
+            const rtFromSheet = sheetMatch ? String(parseInt(sheetMatch[0], 10)) : '1';
+
             const sheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
@@ -1971,7 +2178,7 @@
               risti4T: -1, ristiALKI: -1, posbindu: -1
             };
 
-            for (let r = 0; r < Math.min(6, json.length); r++) {
+            for (let r = 0; r < Math.min(8, json.length); r++) {
               const row = json[r];
               const rowStr = row.map(x => String(x).toUpperCase().trim()).join(' ');
               
@@ -2025,15 +2232,21 @@
               if (!row || row.length === 0) continue;
 
               const namaRaw = colMap.nama !== -1 && row[colMap.nama] !== undefined ? String(row[colMap.nama]).trim() : '';
+              const upperNama = namaRaw.toUpperCase();
 
+              // Abaikan baris rekapitulasi/footer lokal
               if (!namaRaw || 
-                  namaRaw.toUpperCase().includes('NAMA') || 
-                  namaRaw === '0' ||
-                  namaRaw === '-' ||
-                  namaRaw.toUpperCase().includes('KABUPATEN') ||
-                  namaRaw.toUpperCase().includes('DESA') ||
-                  namaRaw.toUpperCase().includes('JUMLAH') ||
-                  namaRaw.toUpperCase().includes('LAKI')) {
+                  namaRaw.length < 2 ||
+                  upperNama.includes('JUMLAH') || 
+                  upperNama.includes('TOTAL') || 
+                  upperNama.includes('REKAP') || 
+                  upperNama.includes('MENGETAHUI') || 
+                  upperNama.includes('KEPALA DESA') || 
+                  upperNama.includes('BIDAN') || 
+                  upperNama.includes('KECAMATAN') || 
+                  upperNama.includes('KABUPATEN') || 
+                  upperNama === '-' || 
+                  upperNama === '0') {
                 continue;
               }
 
@@ -2045,8 +2258,11 @@
                 currentRT = rowRT;
               }
 
-              const nik = colMap.nik !== -1 && row[colMap.nik] ? String(row[colMap.nik]).replace(/['",\s]/g, '').trim() : '';
-              const jk = colMap.jk !== -1 && row[colMap.jk] ? String(row[colMap.jk]).trim().toUpperCase() : '';
+              const rawNIK = colMap.nik !== -1 && row[colMap.nik] ? String(row[colMap.nik]).replace(/['",\s]/g, '').trim() : '';
+              let jk = colMap.jk !== -1 && row[colMap.jk] ? String(row[colMap.jk]).trim().toUpperCase() : '';
+              if (jk.startsWith('L')) jk = 'L';
+              else if (jk.startsWith('P')) jk = 'P';
+
               const hubungan = colMap.hubungan !== -1 && row[colMap.hubungan] ? String(row[colMap.hubungan]).trim() : '';
               const tempatLahir = colMap.tempatLahir !== -1 && row[colMap.tempatLahir] ? String(row[colMap.tempatLahir]).trim() : '';
               const tglLahir = colMap.tglLahir !== -1 && row[colMap.tglLahir] ? String(row[colMap.tglLahir]).trim() : '';
@@ -2085,16 +2301,18 @@
               let cleanKB = (kbVal && kbVal !== '-' && kbVal !== '0') ? kbVal : '';
 
               let docId = '';
-              if (nik && nik.length >= 10 && !nik.startsWith('9999')) {
-                docId = `${activeDesa}_NIK_${nik}`;
+              if (rawNIK && rawNIK.length >= 10 && !rawNIK.startsWith('9999') && !uniqueKeys.has(`${activeDesa}_NIK_${rawNIK}`)) {
+                docId = `${activeDesa}_NIK_${rawNIK}`;
               } else {
+                const cleanRTNum = normalizeRT(currentRT);
                 const slugNama = namaRaw.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-                const slugRT = String(currentRT).replace(/[^a-zA-Z0-9]/g, '_');
                 const slugTgl = tglLahir.replace(/[^a-zA-Z0-9]/g, '_');
-                docId = `${activeDesa}_RT${slugRT}_${slugNama}_${slugTgl}`;
+                docId = `${activeDesa}_RT${cleanRTNum}_${slugNama}_${slugTgl}_row${r}`;
               }
 
-              if (uniqueKeys.has(docId)) continue;
+              if (uniqueKeys.has(docId)) {
+                docId += `_${Math.random().toString(36).substring(2, 6)}`;
+              }
               uniqueKeys.add(docId);
 
               batchData.push({
@@ -2103,9 +2321,9 @@
                 desa_nama: namaDesaTarget,
                 rt: String(currentRT),
                 no_kk: currentNoKK,
-                nik: nik,
+                nik: rawNIK,
                 nama: namaRaw,
-                jk: jk,
+                jk: jk || 'L',
                 hubungan: hubungan,
                 tempat_lahir: tempatLahir,
                 ttl: tempatLahir ? (tglLahir ? `${tempatLahir}, ${tglLahir}` : tempatLahir) : tglLahir,
@@ -2128,12 +2346,12 @@
           });
 
           if (batchData.length === 0) {
-            alert("Tidak ditemukan baris data yang valid.");
+            alert("Tidak ditemukan baris data penduduk yang valid.");
             applyFilters();
             return;
           }
 
-          const konfirmasi = confirm(`Ditemukan ${batchData.length} data sasaran dari file Excel.\n\nData akan dialokasikan ke: ${namaDesaTarget}.\n\nLanjutkan sinkronisasi?`);
+          const konfirmasi = confirm(`Ditemukan ${batchData.length} baris sasaran valid dari file Excel.\n\nData dialokasikan ke: ${namaDesaTarget}.\n\nLanjutkan sinkronisasi?`);
           if (!konfirmasi) {
             applyFilters();
             return;
@@ -2158,7 +2376,7 @@
               statusEl.innerHTML = `<span class="text-teal-700 font-semibold"><i class="fa-solid fa-spinner fa-spin"></i> Sinkronisasi ${namaDesaTarget}... (${totalProcessed}/${batchData.length})</span>`;
             }
 
-            alert(`Sukses! ${batchData.length} data ${namaDesaTarget} berhasil tersimpan ke Firebase.`);
+            alert(`Sukses! Seluruh ${batchData.length} data sasaran ${namaDesaTarget} berhasil tersimpan ke Firebase.`);
           } else {
             allData = batchData.map(d => ({ id: d.docId, ...d }));
             updateDashboard();
@@ -2178,7 +2396,7 @@
     }
 
     // ==========================================
-    // 9. EKSPOR LAPORAN MULTI-SHEET LENGKAP & AUTO-WIDTH
+    // 11. EKSPOR LAPORAN MULTI-SHEET LENGKAP
     // ==========================================
     function exportToExcel() {
       const isLogin = !!currentUser;
@@ -2249,15 +2467,11 @@
       XLSX.utils.book_append_sheet(wb, wsRekap, "REKAPAN TOTAL");
 
       if (!isGlobal) {
-        const uniqueRTs = [...new Set(dataset.map(p => String(p.rt).trim()).filter(x => x && x !== '-' && x !== '0'))];
-        uniqueRTs.sort((a, b) => {
-          const numA = parseInt(a.replace(/\D/g, '')) || 0;
-          const numB = parseInt(b.replace(/\D/g, '')) || 0;
-          return numA - numB;
-        });
+        const uniqueRTs = [...new Set(dataset.map(p => normalizeRT(p.rt)).filter(x => x !== '0'))];
+        uniqueRTs.sort((a, b) => parseInt(a) - parseInt(b));
 
-        uniqueRTs.forEach(rtNomor => {
-          const wargaRT = dataset.filter(p => String(p.rt).trim() === String(rtNomor));
+        uniqueRTs.forEach(rtNum => {
+          const wargaRT = dataset.filter(p => normalizeRT(p.rt) === rtNum);
           if (wargaRT.length > 0) {
             const rowsRT = wargaRT.map((d, idx) => ({
               "NO": idx + 1,
@@ -2284,7 +2498,7 @@
             }));
             const wsRT = XLSX.utils.json_to_sheet(rowsRT);
             autoFitColumns(wsRT, rowsRT);
-            const sheetTitle = (rtNomor.includes('/') ? `RT ${rtNomor.split('/')[0]}` : `RT ${rtNomor}`).substring(0, 31);
+            const sheetTitle = `RT ${rtNum}`;
             XLSX.utils.book_append_sheet(wb, wsRT, sheetTitle);
           }
         });
@@ -2324,7 +2538,7 @@
       XLSX.writeFile(wb, fileName);
     }
 
-    // Inisialisasi awal
+    // Inisialisasi awal versi
     updateVersionLabels(localAppVersion);
   </script>
 </body>
